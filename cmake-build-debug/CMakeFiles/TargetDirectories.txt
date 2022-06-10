@@ -1,0 +1,3 @@
+/home/fail/starwars_server/cmake-build-debug/CMakeFiles/starwars_server.dir
+/home/fail/starwars_server/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/fail/starwars_server/cmake-build-debug/CMakeFiles/rebuild_cache.dir

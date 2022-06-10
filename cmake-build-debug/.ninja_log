@@ -1,0 +1,5 @@
+# ninja log v5
+5257	5346	1654897879615873886	starwars_server	78d58470843f7a4f
+3	5257	1654897879525873887	CMakeFiles/starwars_server.dir/server.cpp.o	20b3a59a24838dac
+5	7335	1654898266495873726	CMakeFiles/starwars_server.dir/server.cpp.o	20b3a59a24838dac
+7335	7471	1654898266635873725	starwars_server	78d58470843f7a4f
