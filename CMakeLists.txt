@@ -3,4 +3,4 @@ project(starwars_server)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(starwars_server server.cpp Rotation.h InfoToSend.h boost_asio.h)
+add_executable(starwars_server main.cpp Rotation.h InfoToSend.h boost_asio.h server.h)

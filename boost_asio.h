@@ -16,6 +16,7 @@
 #endif
 
 #include <boost/asio.hpp>
+#include <memory>
 #include <boost/noncopyable.hpp>
 
 #include <thread>
@@ -77,12 +78,12 @@ struct Session
 class AsyncTCPClient : public boost::noncopyable
 {
 public:
-    AsyncTCPClient(unsigned char num_of_threads)
+    explicit AsyncTCPClient(unsigned char num_of_threads)
     {
 
         //instantiates an object of the asio::io_service::work class
         // passing an instance of the asio::io_service class named m_ios to its constructor
-        m_work.reset(new boost::asio::io_service::work(m_ios));
+        m_work = std::make_unique<boost::asio::io_service::work>(m_ios);
 
         for (unsigned char i = 1; i <= num_of_threads; i++)
         {
@@ -229,7 +230,7 @@ public:
         // Destroy work object. This allows the I/O threads to
         // exit the event loop when there are no more pending
         // asynchronous operations.
-        m_work.reset(NULL);
+        m_work.reset(nullptr);
 
         // Waiting for the I/O threads to exit.
         for (auto& thread : m_threads)

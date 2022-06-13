@@ -11,6 +11,7 @@
 #include <regex>
 #include <thread>
 #include "MapCreator.h"
+#include "server.h"
 
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -39,6 +40,8 @@ public:
 	virtual bool Tick() {
 		map_manager->CheckCollisionsAll();
 		map_manager->MoveAll();
+
+        return false;
 	}
 private:
 
@@ -49,7 +52,7 @@ private:
 	//std::vector<Icon*> icons;
 };
 
-const unsigned int DEFAULT_THREAD_POOL_SIZE = 2; // для буста
+const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
 
 int main()
 {
@@ -67,9 +70,9 @@ int main()
 		}
 		});
 
-	std::thread t2([]() {
+	std::thread t2([&port_num]() {
 		try
-		{/*
+		{
 			//it instantiates an object of the Server class named srv.
 			Server srv;
 
@@ -88,7 +91,7 @@ int main()
 
 			std::this_thread::sleep_for(std::chrono::seconds(60));
 
-			srv.Stop();*/
+			srv.Stop();
 		}
 		catch (boost::system::system_error& e)
 		{

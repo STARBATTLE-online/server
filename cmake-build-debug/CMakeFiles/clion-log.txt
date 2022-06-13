@@ -1,4 +1,0 @@
-/home/fail/Downloads/clion-2022.1.1/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/fail/Downloads/clion-2022.1.1/bin/ninja/linux/ninja -G Ninja -S /home/fail/starwars_server -B /home/fail/starwars_server/cmake-build-debug
--- Configuring done
--- Generating done
--- Build files have been written to: /home/fail/starwars_server/cmake-build-debug
