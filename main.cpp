@@ -56,6 +56,8 @@ const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
 
 int main()
 {
+	std::cout << "Server started...\n";
+
 	srand(time(NULL));
 
 	
@@ -67,6 +69,7 @@ int main()
 		while (true)
 		{
 			if(framework.Tick()) break;
+			std::this_thread::sleep_for(std::chrono::seconds(100));
 		}
 		});
 
@@ -89,7 +92,9 @@ int main()
 
 			srv.Start(port_num, thread_pool_size);
 
-			std::this_thread::sleep_for(std::chrono::seconds(60));
+			while(true) {
+				std::this_thread::sleep_for(std::chrono::seconds(10000000));
+			}
 
 			srv.Stop();
 		}
@@ -105,6 +110,8 @@ int main()
 	t2.join();
 
     framework.Close();
+
+	std::cout << "Server shut down.\n";
 
 	return 0;
 }

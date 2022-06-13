@@ -14,6 +14,12 @@
 #include <iostream>
 #include <utility>
 
+std::string make_string(boost::asio::streambuf& streambuf)
+{
+    return {buffers_begin(streambuf.data()), 
+            buffers_end(streambuf.data())};
+}
+
 //responsible for handling a single client by reading the request message, processing it, and then sending back the response message.
 //Each instance of the Service class is intended to handle one connected client
 //by reading the request message, processing it, and then sending the response message back.
@@ -62,7 +68,6 @@ private:
 
         // Process the request.
         m_response = ProcessRequest(m_request);
-
         // When the ProcessRequest() method completes and returns the string containing the response message,
         // the asynchronous writing operation is initiated to send this response message back to the client.
         boost::asio::async_write(*m_sock, boost::asio::buffer(m_response),
@@ -116,16 +121,19 @@ private:
         // Prepare and return the response message.
         //std::string response = "Response from server\n";
         std::string response;
-        int kbsize=1;
+        /*int kbsize=1;
         int bytesInKB=1024;
         for(int j=0; j<kbsize; j++){
             for(int i=0; i<bytesInKB; i++){
                 response.push_back('1');
             }
         }
-        response.push_back('\n');
-        //std::cout<<response;
-        //response = "Response from server\n";
+        response.push_back('\n');*/
+
+        response = make_string(request);
+
+        std::cout << response;
+        response = "Response from server\n";
         return response;
     }
 
