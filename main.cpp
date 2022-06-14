@@ -1,7 +1,5 @@
 ﻿#define CURL_STATICLIB
 
-#include "boost_asio.h"
-
 #include <iostream>
 #include <random>
 #include <iostream>

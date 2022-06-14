@@ -14,6 +14,8 @@
 #include <iostream>
 #include <utility>
 
+#include "Requests.h"
+
 std::string make_string(boost::asio::streambuf& streambuf)
 {
     return {buffers_begin(streambuf.data()), 
@@ -67,7 +69,7 @@ private:
         }
 
         // Process the request.
-        m_response = ProcessRequest(m_request);
+        m_response = ProcessTCPRequest(m_request);
         // When the ProcessRequest() method completes and returns the string containing the response message,
         // the asynchronous writing operation is initiated to send this response message back to the client.
         boost::asio::async_write(*m_sock, boost::asio::buffer(m_response),
@@ -105,7 +107,7 @@ private:
     //To keep things simple,  we implement a dummy service which only emulates the execution of certain operations
     //The request processing emulation consists of performing many increment operations to emulate operations
     //that intensively consume CPU and then putting the thread of control to sleep for some time to emulate I/O operations
-    static std::string ProcessRequest(boost::asio::streambuf &request)
+    static std::string ProcessTCPRequest(boost::asio::streambuf &request)
     {
 
         // In this method we parse the request, process it
@@ -128,10 +130,7 @@ private:
         }
         response.push_back('\n');*/
 
-        response = make_string(request);
-
-        std::cout << response;
-        response = "Response from server\n";
+        response = ProcessRequest(make_string(request));
         return response;
     }
 

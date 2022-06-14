@@ -34,8 +34,11 @@ public:
 	Ship(const char* sprite_path, double sprite_width, double sprite_height, int sprite_mass) {
 		width = sprite_width;
 		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
 	};
-	~Ship() override = default;;
+	~Ship() override = default;
 
 	
 	void SetRotation(Rotation rot) {
@@ -169,6 +172,14 @@ public:
 		MoveManual(k);
 	};
 
+	uint64_t GetPrivateKey() {
+		return private_key;
+	}
+
+	uint64_t GetPublicKey() {
+		return public_key;
+	}
+
 protected:
 	HeadSprite* power;  //?
 	Rotation rotation;	
@@ -176,4 +187,7 @@ protected:
 	double control_impulse = 0.01;
 	double engine_power_speed = 2;
 	std::vector<Bullet*> bullets;
+
+	uint64_t private_key = 0;
+	uint64_t public_key = 0;
 };
