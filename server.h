@@ -115,8 +115,6 @@ private:
 
         // Emulate operations that block the thread
         // (e.g. synch I/O operations).
-        std::this_thread::sleep_for(
-                std::chrono::milliseconds(1));
 
         // Prepare and return the response message.
         //std::string response = "Response from server\n";
