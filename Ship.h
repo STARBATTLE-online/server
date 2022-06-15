@@ -31,12 +31,14 @@ class Ship : public MovableSprite
 {
 public:
 	Ship() {};
-	Ship(const char* sprite_path, double sprite_width, double sprite_height, int sprite_mass) {
+	Ship(double sprite_width, double sprite_height) {
 		width = sprite_width;
 		height = sprite_height;
 
 		private_key = rand();
 		public_key = rand();
+
+		sprite_id = (rand() % 3) + 1;
 	};
 	~Ship() override = default;
 
@@ -180,6 +182,10 @@ public:
 		return public_key;
 	}
 
+	uint64_t GetSpriteID() {
+		return sprite_id;
+	}
+
 protected:
 	HeadSprite* power;  //?
 	Rotation rotation;	
@@ -190,4 +196,6 @@ protected:
 
 	uint64_t private_key = 0;
 	uint64_t public_key = 0;
+
+	uint64_t sprite_id = 0;
 };

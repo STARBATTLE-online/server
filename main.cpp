@@ -8,13 +8,15 @@
 #include <string>
 #include <regex>
 #include <thread>
-#include "MapCreator.h"
-#include "server.h"
 
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
+
+#include "MapCreator.h"
+#include "server.h"
+#include "Requests.h"
 
 class MyFramework {
 
@@ -27,7 +29,10 @@ public:
 
 	virtual bool Init() {
 
-		map_manager = std::make_unique<MapCreator>();
+		map_manager = std::make_shared<MapCreator>();
+
+		RequestManager::SetMapCreator(map_manager);
+
 		return true;
 	}
 
@@ -36,6 +41,8 @@ public:
 	}
 
 	virtual bool Tick() {
+		std::lock_guard<std::mutex> lock(map_manager->mt);
+
 		map_manager->CheckCollisionsAll();
 		map_manager->MoveAll();
 
@@ -43,7 +50,7 @@ public:
 	}
 private:
 
-	std::unique_ptr<MapCreator> map_manager;
+	std::shared_ptr<MapCreator> map_manager;
 
 	//Старая строка, но, кстати, icons ещё нигде нет, надо добавить.
 	//И тебе и мне. Это всякие иконки типа щита, которые выпадают из астероидов
