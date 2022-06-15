@@ -130,7 +130,7 @@ private:
         }
         response.push_back('\n');*/
 
-        response = ProcessRequest(make_string(request));
+        response = RequestManager::ProcessRequest(make_string(request));
         return response;
     }
 
