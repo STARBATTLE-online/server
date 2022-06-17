@@ -38,6 +38,14 @@ public:
 			return false;
 		}
 	}
+
+	std::string Serialize() override {
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2);
+		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second;
+
+		return ss.str();
+	}
 	
 private:
 	virtual std::pair<double, double> CountCollision(MovableSprite* element) {
@@ -71,6 +79,10 @@ public:
         SetSpeed(speed_x, speed_y);
     };
 
+	std::string GetType() override {
+		return "SmallAsteroid";
+	}
+
 private:
 
 };
@@ -92,6 +104,9 @@ public:
 		return std::make_pair(asteroid1, asteroid2);		
 	}
 	
+	std::string GetType() override {
+		return "BigAsteroid";
+	}
 
 private:
 

@@ -53,6 +53,10 @@ public:
 
 	}
 
+	std::string GetType() override {
+		return "MovableSprite";
+	}
+
 protected:
 	double y_speed = 0.;
 	double x_speed = 0.;

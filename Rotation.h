@@ -13,4 +13,22 @@ enum Rotation
     Right
 };
 
+std::ostream& operator<<(Rotation r, std::ostream& os) {
+    switch (r) {
+        case Rotation::Top:
+            os << "T";
+            break;
+        case Rotation::Left:
+            os << "L";
+            break;
+        case Rotation::Bottom:
+            os << "B";
+            break;
+        case Rotation::Right:
+            os << "R";
+            break;
+    }
+    return os;
+}
+
 #endif //STARWARS_SERVER_ROTATION_H
