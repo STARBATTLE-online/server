@@ -9,9 +9,9 @@ public:
 	MapCreator(){
 		ObserverSubscribes();
 		
-		for (int i = 0; i < NUM_ASTEROIDS(); i++)
+		for (int i = 0; i < NUM_ASTEROIDS_BIG + NUM_ASTEROIDS_SMALL; i++)
 		{
-			if (i < NUM_ASTEROIDS() / 2)
+			if (i < NUM_ASTEROIDS_BIG)
 			{
 				asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, rand() % 10 - 5, rand() % 10 - 5));
 			}
@@ -133,8 +133,33 @@ public:
 			
 		}
 	}
+
+	std::string Serialize() {
+		std::stringstream ss;
+		
+		for (auto astroid : asteroids)
+		{
+			ss << astroid->Serialize() << " ";
+		}
+
+		for (auto ship : ships)
+		{
+			ss << ship->Serialize() << " ";
+		}
+
+		return ss.str();
+	}
 	
 	std::mutex mt;
+
+
+	auto GetShips() {
+		return ships;
+	}
+
+	auto GetAsteroids() {
+		return asteroids;
+	}
 protected:
 	std::vector<Asteroid*> asteroids;
 	std::vector<Ship*> ships;

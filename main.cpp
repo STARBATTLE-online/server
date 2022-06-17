@@ -46,6 +46,8 @@ public:
 		map_manager->CheckCollisionsAll();
 		map_manager->MoveAll();
 
+		//std::cout << map_manager->Serialize() << "\n";
+
         return false;
 	}
 private:
@@ -74,7 +76,6 @@ int main()
 		while (true)
 		{
 			if(framework.Tick()) break;
-			std::this_thread::sleep_for(std::chrono::seconds(100));
 		}
 		});
 

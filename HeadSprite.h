@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <string>
+#include <sstream>
 
 #include "GlobalVariables.h"
 
@@ -37,16 +39,20 @@ public:
 		return std::make_pair(global_x + width / 2, global_y + height / 2);
 	}
 
-	virtual  void SendMouseMoveEvent(...) {};
-
-	virtual  void SendMouseClickEvent(...) {};
-	
-	virtual  void SendKeyPressEvent(...) {};
-
 	double Distance(HeadSprite* object) {
 		return sqrt(pow(GetCenterGlobal().first - object->GetCenterGlobal().first, 2)
 			+ pow(GetCenterGlobal().second - object->GetCenterGlobal().second, 2))
 			- GetRadius() - object->GetRadius();
+	}
+
+	virtual std::string GetType() {
+		return "HeadSprite";
+	}
+
+	virtual std::string Serialize() {
+		std::stringstream ss;
+		ss << "MovableSprite" << " " << global_x << " " << global_y << " ";
+		return ss.str();
 	}
 	
 protected:

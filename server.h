@@ -101,7 +101,7 @@ private:
     // Here we perform the cleanup.
     void onFinish()
     {
-        delete this;
+        //delete this;
     }
 
     //To keep things simple,  we implement a dummy service which only emulates the execution of certain operations
@@ -129,8 +129,8 @@ private:
             }
         }
         response.push_back('\n');*/
-
-        response = RequestManager::ProcessRequest(make_string(request));
+        
+        response = RequestManager::ProcessRequest(make_string(request) + "\n");
         return response;
     }
 

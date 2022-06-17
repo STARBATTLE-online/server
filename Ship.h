@@ -14,15 +14,34 @@ public:
         global_x = x;
         global_y = y;
     };
+
+	Bullet(int x, int y, double x_speed, double y_speed) {
+		width = 13;
+		height = 13;
+		global_x = x;
+		global_y = y;
+		this->x_speed = x_speed;
+		this->y_speed = y_speed;
+	};
+
+	std::string Serialize() override {
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2);
+		ss << "BULLET " << global_x << " " << global_y << " " << x_speed << " " << y_speed;
+
+		return ss.str();
+	}
+
     ~Bullet() {};
 
-    void Border() override{
+    void Border() override {
         if ((global_x + width / 2 >= MAP_WIDTH)
             || (global_x < (width / 2) * -1)
             || (global_y + height / 2 >= MAP_HEIGHT)
             || (global_y < (height / 2) * -1))
         {
-            delete this;
+			// TODO: Proper deletion.
+            // delete this;
         }
     }
 };
@@ -54,13 +73,16 @@ public:
 		UseImpulse();
 
 		for(auto bullet : bullets) {
-			bullet->Move();
+			if(bullet) bullet->Move();
 		}
-		
-		if (dynamic_cast<Shield*>(power))
-		{
-			power->SetCoordsByCenter(GetCenterGlobal().first, GetCenterGlobal().second);
-		}		
+
+		// THIS SEGFEAULTS DONT UNCOMMENT THIS LINE 
+		/*
+			if (dynamic_cast<Shield*>(power))
+			{
+				power->SetCoordsByCenter(GetCenterGlobal().first, GetCenterGlobal().second);
+			}	
+		*/	
 	}
 
 	virtual bool CheckCollision(HeadSprite* element) {
@@ -114,7 +136,20 @@ public:
 	}
 
 	void Shoot() {
-		bullets.push_back(new Bullet(GetCoordsGlobal().first + GetSize().second / 2, GetCoordsGlobal().second + GetSize().first / 2));
+		Shoot(mouse_x, mouse_y);
+	}
+
+	// TODO: Verify that this works
+	void Shoot(double target_x, double target_y) {
+		// Calculate target angle
+		double target_angle = atan2(target_y - GetCoordsGlobal().second, target_x - GetCoordsGlobal().first);
+		// Calculate speed along axises
+		double x_speed = cos(target_angle) * 4;
+		double y_speed = sin(target_angle) * 4;
+		// Create bullet
+		bullets.push_back(new Bullet(GetCoordsGlobal().first + GetSize().second / 2, GetCoordsGlobal().second + GetSize().first / 2, x_speed, y_speed));
+		// Set bullet speed
+		bullets.back()->SetSpeed(x_speed, y_speed);
 	}
 
 	void GetRotationByMouse(int x_mouse, int y_mouse) {
@@ -167,6 +202,9 @@ public:
 
 	//??? ?? "???????????". ???? ?? ???? - ??????
 	void SendMouseMoveEvent(int x, int y) {
+		mouse_x = x;
+		mouse_y = y;
+
 		GetRotationByMouse(x, y);
 	};
 
@@ -186,6 +224,26 @@ public:
 		return sprite_id;
 	}
 
+	Rotation GetRotation() {
+		return rotation;
+	}
+
+	std::string Serialize() override {
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2);
+		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << GetPublicKey() << " ";
+		
+		for(auto bullet : bullets) {
+			ss << bullet->Serialize() << " ";
+		}
+
+		return ss.str();
+	}
+
+	std::string GetType() override {
+		return "Ship";
+	}
+
 protected:
 	HeadSprite* power;  //?
 	Rotation rotation;	
@@ -198,4 +256,7 @@ protected:
 	uint64_t public_key = 0;
 
 	uint64_t sprite_id = 0;
+	
+	int mouse_x = 0;
+	int mouse_y = 0;
 };
