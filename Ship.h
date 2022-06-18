@@ -57,7 +57,7 @@ public:
 		private_key = rand();
 		public_key = rand();
 
-		sprite_id = (rand() % 3) + 1;
+		sprite_id = 3; // Guaranteed by fair dice roll.
 	};
 	~Ship() override = default;
 
@@ -200,7 +200,7 @@ public:
 	std::string Serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << (std::abs(x_speed) > 0.5 || std::abs(y_speed) > 0.5) << " " << GetPublicKey() << " ";
+		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << GetPublicKey() << " ";
 		
 		for(auto bullet : bullets) {
 			ss << bullet->Serialize() << " ";
@@ -222,7 +222,7 @@ protected:
 	Rotation rotation;	
 	double impulse = 1.01;
 	double control_impulse = 0.01;
-	double engine_power_speed = 2;
+	double engine_power_speed = 4;
 	std::vector<Bullet*> bullets;
 
 	uint64_t private_key = 0;
