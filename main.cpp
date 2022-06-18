@@ -44,7 +44,7 @@ public:
 		std::lock_guard<std::mutex> lock(map_manager->mt);
 
 		map_manager->CheckCollisionsAll();
-		map_manager->MoveAll();
+		map_manager->Tick();
 
 		//std::cout << map_manager->Serialize() << "\n";
 

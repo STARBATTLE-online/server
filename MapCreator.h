@@ -23,7 +23,7 @@ public:
 
 		for(auto astroid : asteroids)
 		{
-			while (AllAsteroidsCheckCollision(astroid))
+			while (AsteroidShipCollisions(astroid))
 			{
 				astroid->SetCoords(rand() % MAP_WIDTH, rand() % MAP_HEIGHT);
 			}
@@ -33,7 +33,27 @@ public:
 	};
 	~MapCreator(){};
 
-	bool AllAsteroidsCheckCollision(MovableSprite* object) {
+	void Shoot(Ship* ship) {
+		Shoot(ship->GetMouseCoords().first, ship->GetMouseCoords().second, ship);
+	}
+
+	// TODO: Verify that this works
+	void Shoot(double target_x, double target_y, Ship* ship) {
+		if(ship->GetReloadTime() != 0) return;
+		// Calculate target angle
+		double target_angle = atan2(target_y - ship->GetCenterGlobal().second, target_x - ship->GetCenterGlobal().first);
+		// Calculate speed along axises
+		double x_speed = cos(target_angle) * BULLET_SPEED;
+		double y_speed = sin(target_angle) * BULLET_SPEED;
+		// Create bullet
+		bullets.push_back(new Bullet(ship->GetCenterGlobal().first, ship->GetCenterGlobal().second, x_speed, y_speed));
+		// Set bullet speed
+		bullets.back()->SetSpeed(x_speed, y_speed);
+		bullets.back()->sender_id = ship->GetPublicKey();
+		ship->SetReloadTime(RELOAD_TIME);
+	}
+
+	bool AsteroidShipCollisions(MovableSprite* object) {
 		
 		for (auto astroid_check : asteroids)
 		{
@@ -55,7 +75,27 @@ public:
 		return false;
 	}
 
-	bool AllShipsCheckCollision(HeadSprite* object) {
+	bool BulletAsteroidCollisions(MovableSprite* object) {
+		for(auto bullet : bullets)
+		{
+			if(bullet->CheckCollision(object))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool BulletShipCollisions(Ship* ship) {
+		bool collisions = std::any_of(bullets.begin(), bullets.end(), [&](Bullet* bullet) {
+			return ship->GetPublicKey() != bullet->sender_id && bullet->CheckCollision(ship);
+		});
+
+		return false;
+	}
+
+	bool AllShipsCheckCollision(MovableSprite* object) {
 		if (dynamic_cast<Ship*>(object))
 		{
 			for (auto enemy : ships)
@@ -110,7 +150,7 @@ public:
 		asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, rand() % 10 - 5, rand() % 10 - 5));
 	}
 
-	void MoveAll() {
+	void Tick() {
 		for (auto astroid : asteroids)
 		{
 			astroid->Move();
@@ -119,17 +159,28 @@ public:
 		{
 			ship->Move();
 		}
+		for (auto bullet : bullets)
+		{
+			bullet->Move();
+			--bullet->lifespan;
+		}
+
+		// Remove bullets that are out of map
+		std::erase_if(bullets, [](Bullet* bullet) {
+			return bullet->lifespan <= 0;
+		});
 	}
 
 	void CheckCollisionsAll() {
 		for (auto astroid : asteroids)
 		{
-			AllAsteroidsCheckCollision(astroid);
+			AsteroidShipCollisions(astroid);
+			BulletAsteroidCollisions(astroid);
 		}
 		for (auto ship : ships)
 		{
+			BulletShipCollisions(ship);
 			AllShipsCheckCollision(ship);
-			
 		}
 	}
 
@@ -146,6 +197,11 @@ public:
 			ss << ship->Serialize() << " ";
 		}
 
+		for (auto bullet : bullets)
+		{
+			ss << bullet->Serialize() << " ";
+		}
+
 		return ss.str();
 	}
 	
@@ -159,7 +215,12 @@ public:
 	auto GetAsteroids() {
 		return asteroids;
 	}
+
+	auto GetBullets() {
+		return bullets;
+	}
 protected:
 	std::vector<Asteroid*> asteroids;
 	std::vector<Ship*> ships;
+	std::vector<Bullet*> bullets;
 };
