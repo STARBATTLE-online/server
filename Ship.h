@@ -61,11 +61,6 @@ public:
 	};
 	~Ship() override = default;
 
-	
-	void SetRotation(Rotation rot) {
-		rotation = rot;
-	}
-
 	void Move() override {
 		global_y += y_speed;
 		global_x += x_speed;
@@ -152,30 +147,6 @@ public:
 		bullets.back()->SetSpeed(x_speed, y_speed);
 	}
 
-	void GetRotationByMouse(int x_mouse, int y_mouse) {
-		//??? ???? ??????? ???????????? ????, ??? ?? ?????, ???? ???????????? ???????
-		if (true) {
-			if (true)
-				SetRotation(Rotation::Left);
-			else {
-				if (true)
-					SetRotation(Rotation::Top);
-				else
-					SetRotation(Rotation::Bottom);
-			}
-		}
-		else {
-			if (true)
-				SetRotation(Rotation::Right);
-			else {
-				if (true)
-					SetRotation(Rotation::Top);
-				else
-					SetRotation(Rotation::Bottom);
-			}
-		}
-	}
-
 	void MoveManual(FRKey k) {
 		switch (k)
 		{
@@ -204,8 +175,6 @@ public:
 	void SendMouseMoveEvent(int x, int y) {
 		mouse_x = x;
 		mouse_y = y;
-
-		GetRotationByMouse(x, y);
 	};
 
 	void SendKeyPressEvent(FRKey k) {
@@ -231,13 +200,17 @@ public:
 	std::string Serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << GetPublicKey() << " ";
+		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << (std::abs(x_speed) > 0.5 || std::abs(y_speed) > 0.5) << " " << GetPublicKey() << " ";
 		
 		for(auto bullet : bullets) {
 			ss << bullet->Serialize() << " ";
 		}
 
 		return ss.str();
+	}
+
+	void SetRotation(Rotation rot) {
+		rotation = rot;
 	}
 
 	std::string GetType() override {

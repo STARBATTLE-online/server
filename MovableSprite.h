@@ -57,6 +57,18 @@ public:
 		return "MovableSprite";
 	}
 
+		
+	void TruncateSpeed(double limit) {
+		double speed = sqrt(pow(GetSpeed().first, 2) + pow(GetSpeed().second, 2));
+		
+		if(speed < limit) return;
+
+		double newX = GetSpeed().first / speed;
+		double newY = GetSpeed().second / speed;
+
+		SetSpeed(newX * limit, newY * limit);
+	}
+
 protected:
 	double y_speed = 0.;
 	double x_speed = 0.;

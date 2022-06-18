@@ -54,7 +54,7 @@ public:
 		ss << "MovableSprite" << " " << global_x << " " << global_y << " ";
 		return ss.str();
 	}
-	
+
 protected:
 	double width;
 	double height;

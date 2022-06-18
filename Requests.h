@@ -40,7 +40,7 @@ std::string RequestManager::ProcessRequest(std::string request)  {
     std::stringstream ss(request);
     std::string output, commandType;
 
-    std::cout << "Request: " << request;
+    //std::cout << "Request: " << request;
 
     while(ss >> commandType) {
         if(commandType == "INIT") {
@@ -59,14 +59,16 @@ std::string RequestManager::ProcessRequest(std::string request)  {
         }
     }
 
-    std::cout << "Response: " << output << std::endl;
+    //std::cout << "Response: " << output << std::endl;
     return output;
 }
 
 std::string RequestManager::MouseMoveRequest(std::stringstream& ss) {
     uint64_t public_key, private_key;
     double mouse_x, mouse_y;
+    std::string rotation;
     ss >> mouse_x >> mouse_y;
+    ss >> rotation;
     ss >> public_key >> private_key;
     auto ships = RequestManager::m_map_creator->GetShips();
 
@@ -74,6 +76,7 @@ std::string RequestManager::MouseMoveRequest(std::stringstream& ss) {
         if(ship->GetPublicKey() == public_key) {
             if(ship->GetPrivateKey() == private_key) {
                 ship->SendMouseMoveEvent(mouse_x, mouse_y);
+                ship->SetRotation(RotationFromString(rotation));
                 return "OK";
             } else {
                 return "INVALID_PRIVATE_KEY";
