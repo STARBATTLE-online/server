@@ -13,7 +13,7 @@ enum Rotation
     Right
 };
 
-std::ostream& operator<<(Rotation r, std::ostream& os) {
+std::ostream& operator<<(std::ostream& os, Rotation r) {
     switch (r) {
         case Rotation::Top:
             os << "T";

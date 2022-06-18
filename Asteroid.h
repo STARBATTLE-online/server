@@ -25,7 +25,7 @@ public:
 			if (dynamic_cast<Asteroid*>(element))
 			{
 				std::pair<double, double> result = CountCollision(element);
-				element->SetSpeed(result.first, result.second);
+				//element->SetSpeed(result.first, result.second);
 				return true;
 			}
 			else 
@@ -41,7 +41,7 @@ public:
 
 	std::string Serialize() override {
 		std::stringstream ss;
-		ss << std::fixed << std::setprecision(2);
+		ss << std::fixed << std::setprecision(0);
 		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second;
 
 		return ss.str();
@@ -49,22 +49,17 @@ public:
 	
 private:
 	virtual std::pair<double, double> CountCollision(MovableSprite* element) {
-		double d = sqrt(pow(GetCenterGlobal().first - element->GetCenterGlobal().first, 2)
-			+ pow(GetCenterGlobal().second - element->GetCenterGlobal().second, 2));
-		if (d == 0)
-		{
-			return {0., 0.};
-		}
+		double mass_delta = mass - element->GetMass();
+		double new_speed_x = (GetSpeed().first * mass_delta + 2 * element->GetMass() * element->GetSpeed().first) / (mass + element->GetMass());
+		double new_speed_y = (GetSpeed().second * mass_delta + 2 * element->GetMass() * element->GetSpeed().second) / (mass + element->GetMass());
 
-		//���� ������� ��������, ����������� �����������
-		double v1_x = (x_speed * (mass - element->GetMass()) + 2 * element->GetMass() * element->GetSpeed().first) / (mass + element->GetMass());
-		double v2_x = (element->GetSpeed().first * (element->GetMass() - mass) + 2 * mass * x_speed) / (mass + element->GetMass());
-		double v1_y = (y_speed * (mass - element->GetMass()) + 2 * element->GetMass() * element->GetSpeed().second) / (mass + element->GetMass());
-		double v2_y = (element->GetSpeed().second * (element->GetMass() - mass) + 2 * mass * y_speed) / (mass + element->GetMass());
-		
-		SetSpeed(v1_x, v1_y);
-		element->SetSpeed(v2_x, v2_y);
-		return std::make_pair(v2_x, v2_y);
+		double new_speed_x_element = (-element->GetSpeed().first * mass_delta + 2 * mass * GetSpeed().first) / (mass + element->GetMass());
+		double new_speed_y_element = (-element->GetSpeed().second * mass_delta + 2 * mass * GetSpeed().second) / (mass + element->GetMass());
+
+		SetSpeed(new_speed_x, new_speed_y);
+		element->SetSpeed(new_speed_x_element, new_speed_y_element);
+
+		return {0, 0};
 	}	
 };
 

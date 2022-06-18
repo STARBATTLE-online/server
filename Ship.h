@@ -26,7 +26,7 @@ public:
 
 	std::string Serialize() override {
 		std::stringstream ss;
-		ss << std::fixed << std::setprecision(2);
+		ss << std::fixed << std::setprecision(0);
 		ss << "BULLET " << global_x << " " << global_y << " " << x_speed << " " << y_speed;
 
 		return ss.str();
@@ -180,16 +180,16 @@ public:
 		switch (k)
 		{
 		case FRKey::RIGHT:
-			x_speed = -1 * engine_power_speed;
-			break;
-		case FRKey::LEFT:
 			x_speed = engine_power_speed;
 			break;
+		case FRKey::LEFT:
+			x_speed = -1 * engine_power_speed;
+			break;
 		case FRKey::DOWN:
-			y_speed = -1 * engine_power_speed;
+			y_speed = engine_power_speed;
 			break;
 		case FRKey::UP:
-			y_speed = engine_power_speed;
+			y_speed = -1 * engine_power_speed;
 			break;
 		default:
 			break;
@@ -230,7 +230,7 @@ public:
 
 	std::string Serialize() override {
 		std::stringstream ss;
-		ss << std::fixed << std::setprecision(2);
+		ss << std::fixed << std::setprecision(0);
 		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << GetPublicKey() << " ";
 		
 		for(auto bullet : bullets) {
