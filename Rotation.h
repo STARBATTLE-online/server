@@ -13,6 +13,20 @@ enum Rotation
     Right
 };
 
+    Rotation RotationFromString(std::string s) {
+        if(s == "Top") {
+            return Top;
+        } else if(s == "Left") {
+            return Left;
+        } else if(s == "Bottom") {
+            return Bottom;
+        } else if(s == "Right") {
+            return Right;
+        } else {
+            return Top;
+        }
+    }
+
 std::ostream& operator<<(std::ostream& os, Rotation r) {
     switch (r) {
         case Rotation::Top:

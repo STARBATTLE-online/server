@@ -18,9 +18,7 @@ public:
 		{
 			return false;
 		}
-		else if (GetRadius() + element->GetRadius()
-			>= sqrt(pow(GetCenterGlobal().first - element->GetCenterGlobal().first, 2)
-			+ pow(GetCenterGlobal().second - element->GetCenterGlobal().second, 2)))
+		else if (Distance(element) < 0)
 		{
 			if (dynamic_cast<Asteroid*>(element))
 			{
@@ -49,15 +47,41 @@ public:
 	
 private:
 	virtual std::pair<double, double> CountCollision(MovableSprite* element) {
-		double mass_delta = mass - element->GetMass();
-		double new_speed_x = (GetSpeed().first * mass_delta + 2 * element->GetMass() * element->GetSpeed().first) / (mass + element->GetMass());
-		double new_speed_y = (GetSpeed().second * mass_delta + 2 * element->GetMass() * element->GetSpeed().second) / (mass + element->GetMass());
+		double distanceSquared = pow(GetCenterGlobal().first - element->GetCenterGlobal().first, 2)
+			+ pow(GetCenterGlobal().second - element->GetCenterGlobal().second, 2);
 
-		double new_speed_x_element = (-element->GetSpeed().first * mass_delta + 2 * mass * GetSpeed().first) / (mass + element->GetMass());
-		double new_speed_y_element = (-element->GetSpeed().second * mass_delta + 2 * mass * GetSpeed().second) / (mass + element->GetMass());
+		double distance = sqrt(distanceSquared);
 
-		SetSpeed(new_speed_x, new_speed_y);
-		element->SetSpeed(new_speed_x_element, new_speed_y_element);
+		double overlap = (distance - (GetRadius() + element->GetRadius())) / 2.;
+
+		double moveX = (overlap * (GetCenterGlobal().first - element->GetCenterGlobal().first)) / distance;
+		double moveY = (overlap * (GetCenterGlobal().second - element->GetCenterGlobal().second)) / distance;
+
+		SetCoordsByCenter(GetCenterGlobal().first - moveX, GetCenterGlobal().second - moveY);
+		element->SetCoordsByCenter(element->GetCenterGlobal().first + moveX, element->GetCenterGlobal().second + moveY);
+
+		// Find normal vector
+		double normalX = -(GetCenterGlobal().first - element->GetCenterGlobal().first) / distance;
+		double normalY = -(GetCenterGlobal().second - element->GetCenterGlobal().second) / distance;
+
+		// Find tangent vector
+		double tangentX = -normalY;
+		double tangentY = normalX;
+
+		double dotProductTangent1 = tangentX * GetSpeed().first + tangentY * GetSpeed().second;
+		double dotProductTangent2 = tangentX * element->GetSpeed().first + tangentY * element->GetSpeed().second;
+		
+		double dotProductNormal1 = normalX * GetSpeed().first + normalY * GetSpeed().second;
+		double dotProductNormal2 = normalX * element->GetSpeed().first + normalY * element->GetSpeed().second;
+
+		double m1 = (dotProductNormal1 * (GetMass() - element->GetMass()) + 2 * element->GetMass() * dotProductNormal2) / (GetMass() + element->GetMass());
+		double m2 = (dotProductNormal2 * (element->GetMass() - GetMass()) + 2 * GetMass() * dotProductNormal1) / (GetMass() + element->GetMass());
+
+		SetSpeed(tangentX * dotProductTangent1 + normalX * m1, tangentY * dotProductTangent1 + normalY * m1);
+		element->SetSpeed(tangentX * dotProductTangent2 + normalX * m2, tangentY * dotProductTangent2 + normalY * m2);
+
+		TruncateSpeed(3);
+		element->TruncateSpeed(3);
 
 		return {0, 0};
 	}	
