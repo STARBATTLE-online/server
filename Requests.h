@@ -22,11 +22,11 @@ public:
     static void SetMapCreator(std::shared_ptr<MapCreator> map_creator);
 
     static std::string ProcessRequest(std::string request);
-    static std::string InitRequest(std::stringstream& ss);
-    static std::string MouseButtonRequest(std::stringstream& ss);
-    static std::string MouseMoveRequest(std::stringstream& ss);
-    static std::string KeyRequest(std::stringstream& ss);
-    static std::string TickRequest(std::stringstream& ss);
+    static void InitRequest(std::stringstream& ss, std::stringstream& response);
+    static void MouseButtonRequest(std::stringstream& ss, std::stringstream& response);
+    static void MouseMoveRequest(std::stringstream& ss, std::stringstream& response);
+    static void KeyRequest(std::stringstream& ss, std::stringstream& response);
+    static void TickRequest(std::stringstream& ss, std::stringstream& response);
 };
 
 std::shared_ptr<MapCreator> RequestManager::m_map_creator;
@@ -37,6 +37,7 @@ void RequestManager::SetMapCreator(std::shared_ptr<MapCreator> map_creator) {
 
 std::string RequestManager::ProcessRequest(std::string request)  {
     std::lock_guard<std::mutex> lock(RequestManager::m_map_creator->mt);
+    std::stringstream response;
     std::stringstream ss(request);
     std::string output, commandType;
 
@@ -44,26 +45,26 @@ std::string RequestManager::ProcessRequest(std::string request)  {
 
     while(ss >> commandType) {
         if(commandType == "INIT") {
-            output += InitRequest(ss) + " ";
+            InitRequest(ss, response);
         } else if(commandType == "MB") {
-            output += MouseButtonRequest(ss) + " ";
+            MouseButtonRequest(ss, response);
         } else if(commandType == "KB") {
-            output += KeyRequest(ss) + " ";
+            KeyRequest(ss, response);
         } else if(commandType == "MM") {
-            output += MouseMoveRequest(ss) + " ";
+            MouseMoveRequest(ss, response);
         } else if(commandType == "TICK") {
-            output += TickRequest(ss) + " ";
+            TickRequest(ss, response);
         } else {
-            output += "UNKNOWN_COMMAND";
             break;
         }
+        response << " ";
     }
-
-    //std::cout << "Response: " << output << std::endl;
-    return output;
+    
+    std::cout << response.str() << "\n";
+    return response.str();
 }
 
-std::string RequestManager::MouseMoveRequest(std::stringstream& ss) {
+void RequestManager::MouseMoveRequest(std::stringstream& ss, std::stringstream& response) {
     uint64_t public_key, private_key;
     double mouse_x, mouse_y;
     std::string rotation;
@@ -77,23 +78,26 @@ std::string RequestManager::MouseMoveRequest(std::stringstream& ss) {
             if(ship->GetPrivateKey() == private_key) {
                 ship->SendMouseMoveEvent(mouse_x, mouse_y);
                 ship->SetRotation(RotationFromString(rotation));
-                return "OK";
+                response << "OK";
+                return;
             } else {
-                return "INVALID_PRIVATE_KEY";
+                response << "INVALID_PRIVATE_KEY";
+                return;
             }
         }
     }
 
-    return "INVALID_PUBLIC_KEY";
+    response << "INVALID_PUBLIC_KEY";
 }
 
-std::string RequestManager::MouseButtonRequest(std::stringstream& ss) {
+void RequestManager::MouseButtonRequest(std::stringstream& ss, std::stringstream& response) {
     uint64_t public_key, private_key;
     std::string mb;
     ss >> mb >> public_key >> private_key;
 
     if(mb != "L") {
-        return "OK";
+        response << "OK";
+        return;
     }
 
     auto ships = RequestManager::m_map_creator->GetShips();
@@ -101,18 +105,20 @@ std::string RequestManager::MouseButtonRequest(std::stringstream& ss) {
     for(auto& ship : ships) {
         if(ship->GetPublicKey() == public_key) {
             if(ship->GetPrivateKey() == private_key) {
-                ship->Shoot();
-                return "OK";
+                RequestManager::m_map_creator->Shoot(ship);
+                response << "OK";
+                return;
             } else {
-                return "INVALID_PRIVATE_KEY";
+                response << "INVALID_PRIVATE_KEY";
+                return;
             }
         }
     }
 
-    return "INVALID_PUBLIC_KEY";
+    response << "INVALID_PUBLIC_KEY";
 }
 
-std::string RequestManager::KeyRequest(std::stringstream& ss) {
+void RequestManager::KeyRequest(std::stringstream& ss, std::stringstream& response) {
     uint64_t public_key, private_key;
     std::string key;
     ss >> key >> public_key >> private_key;
@@ -130,27 +136,29 @@ std::string RequestManager::KeyRequest(std::stringstream& ss) {
                 } else if(key == "D") {
                     ship->MoveManual(FRKey::DOWN);
                 } else {
-                    return "INVALID_KEY";
+                    response << "INVALID_KEY";
+                    return;
                 }
                 
-                return "OK";
+                response << "OK";
             } else {
-                return "INVALID_PRIVATE_KEY";
+                response << "INVALID_PRIVATE_KEY";
             }
+            return;
         }
     }
 
-    return "INVALID_PUBLIC_KEY";
+    response << "INVALID_PUBLIC_KEY";
 }
 
-std::string RequestManager::InitRequest(std::stringstream& ss) {
+void RequestManager::InitRequest(std::stringstream& ss, std::stringstream& response) {
     
     auto r = RequestManager::m_map_creator->AddShip(rand() % 1000, rand() % 1000, Rotation::Top);
     auto coords = r->GetCoordsGlobal();
-    return "INIT " + std::to_string(r->GetPublicKey()) + " " + std::to_string(r->GetPrivateKey()) + " " + std::to_string((int)coords.first) + " " 
-            + std::to_string((int)coords.second) + " " + std::to_string(r->GetSpriteID()) + " " + std::to_string(MAP_WIDTH) + " " + std::to_string(MAP_HEIGHT);
+    response << "INIT " << std::to_string(r->GetPublicKey()) << " " << std::to_string(r->GetPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
+            << std::to_string((int)coords.second) << " " << std::to_string(r->GetSpriteID()) << " " << std::to_string(MAP_WIDTH) << " " << std::to_string(MAP_HEIGHT);
 }
 
-std::string RequestManager::TickRequest(std::stringstream& ss) {
-    return "TICK " + RequestManager::m_map_creator->Serialize();
+void RequestManager::TickRequest(std::stringstream& ss, std::stringstream& response) {
+    response << "TICK " << RequestManager::m_map_creator->Serialize();
 }
