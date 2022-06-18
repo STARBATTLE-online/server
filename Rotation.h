@@ -14,13 +14,13 @@ enum Rotation
 };
 
     Rotation RotationFromString(std::string s) {
-        if(s == "Top") {
+        if(s == "T") {
             return Top;
-        } else if(s == "Left") {
+        } else if(s == "L") {
             return Left;
-        } else if(s == "Bottom") {
+        } else if(s == "D") {
             return Bottom;
-        } else if(s == "Right") {
+        } else if(s == "R") {
             return Right;
         } else {
             return Top;
