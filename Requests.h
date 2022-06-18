@@ -144,8 +144,8 @@ std::string RequestManager::InitRequest(std::stringstream& ss) {
     
     auto r = RequestManager::m_map_creator->AddShip(rand() % 1000, rand() % 1000, Rotation::Top);
     auto coords = r->GetCoordsGlobal();
-    return "INIT " + std::to_string(r->GetPublicKey()) + " " + std::to_string(r->GetPrivateKey()) + " " + std::to_string(coords.first) + " " 
-            + std::to_string(coords.second) + " " + std::to_string(r->GetSpriteID()) + " " + std::to_string(r->GetRotation()) + " " + std::to_string(MAP_WIDTH) + " " + std::to_string(MAP_HEIGHT);
+    return "INIT " + std::to_string(r->GetPublicKey()) + " " + std::to_string(r->GetPrivateKey()) + " " + std::to_string((int)coords.first) + " " 
+            + std::to_string((int)coords.second) + " " + std::to_string(r->GetSpriteID()) + " " + std::to_string(MAP_WIDTH) + " " + std::to_string(MAP_HEIGHT);
 }
 
 std::string RequestManager::TickRequest(std::stringstream& ss) {

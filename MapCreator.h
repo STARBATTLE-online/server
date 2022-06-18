@@ -13,11 +13,11 @@ public:
 		{
 			if (i < NUM_ASTEROIDS_BIG)
 			{
-				asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, rand() % 10 - 5, rand() % 10 - 5));
+				asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, (double)(rand() % 10 - 5) / 10, (double)(rand() % 10 - 5) / 10));
 			}
 			else
 			{
-				asteroids.push_back(new SmallAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, rand() % 10 - 5, rand() % 10 - 5));
+				asteroids.push_back(new SmallAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, (double)(rand() % 10 - 5) / 10, (double)(rand() % 10 - 5) / 10));
 			}
 		}
 
@@ -27,7 +27,6 @@ public:
 			{
 				astroid->SetCoords(rand() % MAP_WIDTH, rand() % MAP_HEIGHT);
 			}
-			
 		}
 
 

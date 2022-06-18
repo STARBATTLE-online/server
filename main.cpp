@@ -73,9 +73,15 @@ int main()
     framework.Init();
 
 	std::thread t1([&framework]() {
+		auto previous = std::chrono::high_resolution_clock::now();
 		while (true)
 		{
 			if(framework.Tick()) break;
+			auto current = std::chrono::high_resolution_clock::now();
+			auto delta = current - previous;
+			std::this_thread::sleep_for(std::chrono::milliseconds(16));
+			//std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(16) - delta));
+
 		}
 		});
 
