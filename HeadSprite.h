@@ -12,9 +12,9 @@
  */
 class HeadSprite {
 public:	
-	HeadSprite() {};
+	HeadSprite() = default;
 	
-	virtual ~HeadSprite(){};
+	virtual ~HeadSprite() = default;
 
 	virtual void setCoords(double new_x, double new_y) {
 		global_x = new_x;

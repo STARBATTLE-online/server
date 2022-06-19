@@ -10,10 +10,10 @@
 /*
  * This class is used for storing and managing all the game state.
  */
-class MapCreator
+class World
 {
 public:
-	MapCreator(){	
+	World(){	
 		asteroids.reserve(64);
 		ships.reserve(64);
 		bullets.reserve(64);
@@ -32,7 +32,7 @@ public:
 
 		for(auto astroid : asteroids)
 		{
-			while (AsteroidCollisions(astroid))
+			while (asteroidCollisions(astroid))
 			{
 				astroid->setCoords(rand() % MAP_WIDTH, rand() % MAP_HEIGHT);
 			}
@@ -40,14 +40,20 @@ public:
 
 
 	};
-	~MapCreator(){};
+	~World() {
+		for(auto el : ships) delete el;
+		for(auto el : asteroids) delete el;
+		for(auto el : powerups) delete el;
+		for(auto el : explosions) delete el;
+		for(auto el : bullets) delete el;
+	};
 
-	void Shoot(Ship* ship) {
-		Shoot(ship->GetMouseCoords().first, ship->GetMouseCoords().second, ship);
+	void shoot(Ship* ship) {
+		shoot(ship->getMouseCoords().first, ship->getMouseCoords().second, ship);
 	}
 
 	// TODO: Verify that this works
-	void Shoot(double target_x, double target_y, Ship* ship) {
+	void shoot(double target_x, double target_y, Ship* ship) {
 		if(ship->getReloadTime() != 0) return;
 		// Calculate target angle
 		double target_angle = atan2(target_y - ship->getCenterGlobal().second, target_x - ship->getCenterGlobal().first);
@@ -62,7 +68,7 @@ public:
 		ship->setReloadTime(RELOAD_TIME);
 	}
 
-	Asteroid* AsteroidCollisions(MovableSprite* object) {
+	Asteroid* asteroidCollisions(MovableSprite* object) {
 		for (auto& asteroid : asteroids)
 		{
 			if(asteroid->collisionDetector(object)) {
@@ -72,7 +78,7 @@ public:
 		return nullptr;
 	}
 
-	Bullet* BulletCollisions(MovableSprite* object, uint64_t exemptKey = 0) {
+	Bullet* bulletCollisions(MovableSprite* object, uint64_t exemptKey = 0) {
 		for (auto& bullet : bullets)
 		{
 			if(bullet->sender_id == exemptKey) continue;
@@ -83,7 +89,7 @@ public:
 		return nullptr;
 	}
 
-	Ship* ShipCollisions(MovableSprite* object) {
+	Ship* shipCollisions(MovableSprite* object) {
 		for (auto& ship : ships)
 		{
 			if(ship->collisionDetector(object)) {
@@ -93,7 +99,7 @@ public:
 		return nullptr;
 	}
 
-	Ship* isNearPowerup(Powerup* powerup) {
+	Ship* getCloseToPowerup(Powerup* powerup) {
 		for (auto& ship : ships)
 		{
 			if(ship->distance(powerup) < 0) {
@@ -125,6 +131,8 @@ public:
 	 * Advances the game state by 1 frame.
 	 */
 	void tick() {
+		std::vector<MovableSprite*> erased;
+
 		for (auto astroid : asteroids)
 		{
 			astroid->move();
@@ -136,7 +144,7 @@ public:
 
 			if(ship->getBarrageDuration() > 0) {
 					constexpr const int mod = 10;
-					auto r = (199 - ship->getBarrageDuration()) % (6 * mod);
+					auto r = (200 - ship->getBarrageDuration()) % (8 * mod);
 					
 					auto position = ship->getCenterGlobal();
 					const int barrage_speed_multiplier = 5;
@@ -184,19 +192,35 @@ public:
 			--bullet->lifespan;
 		}
 
-		// Remove bullets that are out of map
-		std::erase_if(bullets, [](Bullet* bullet) {
-			return bullet->lifespan <= 0;
+		std::erase_if(bullets, [&erased] (Bullet* bullet) {
+			if(bullet->lifespan <= 0) {
+				erased.push_back(bullet);
+				return true;
+			}
+
+			return false;
 		});
 
 		// Remove explosions that have already finished
-		std::erase_if(explosions, [this](Explosion* explosion) {
-			return explosion->getCreationTick() + 100 < tick_count;
+		std::erase_if(explosions, [this, &erased](Explosion* explosion) {
+			if(explosion->getCreationTick() + 100 < tick_count) {
+				erased.push_back(explosion);
+				return true;
+			}
+
+			return false;
 		});
 
-		std::erase_if(powerups, [this](Powerup* powerup) {
-			return powerup->getCreationTick() + 250 < tick_count;
+		std::erase_if(powerups, [this, &erased](Powerup* powerup) {
+			if(powerup->getCreationTick() + 250 < tick_count) {
+				erased.push_back(powerup);
+				return true;
+			}
+
+			return false;
 		});
+
+		for(const auto& el : erased) delete el;
 
 		tryGenerateAsteroid();
 
@@ -214,9 +238,11 @@ public:
 	 * handles their resolution.
 	 */
 	void checkAllCollisions() {
+		std::vector<MovableSprite*> erased;
+
 		for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
 		{
-			auto r = BulletCollisions(*it);
+			auto r = bulletCollisions(*it);
 	
 			if(r) {
 				auto ptr = *(--(it.base()));
@@ -238,17 +264,19 @@ public:
 						powerups.push_back(new Barrage(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 					}
 				}
+				erased.push_back(ptr);
+				erased.push_back(r);
 
 				asteroids.erase(--(it.base()));
 				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
 				break;
 			}
 
-			AsteroidCollisions(*it);
+			asteroidCollisions(*it);
 		}
 		for (auto it = ships.rbegin(); it != ships.rend(); ++it)
 		{
-			auto r1 = BulletCollisions(*it, (*it)->getPublicKey());
+			auto r1 = bulletCollisions(*it, (*it)->getPublicKey());
 
 			if(r1) {
 				auto ptr = *(--(it.base()));
@@ -256,14 +284,17 @@ public:
 				explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
 
 				(*it)->takeDamage(2);
-				if((*it)->getHealth() <= 0)
+				if((*it)->getHealth() <= 0) {
+					erased.push_back(ptr);
 					ships.erase(--(it.base()));
+				}
 
+				erased.push_back(r1);
 				bullets.erase(std::remove(bullets.begin(), bullets.end(), r1), bullets.end());
 				break;
 			}
 			
-			auto r2 = AsteroidCollisions(*it);
+			auto r2 = asteroidCollisions(*it);
 
 			if(r2) {
 				auto ptr = *(--(it.base()));
@@ -272,13 +303,14 @@ public:
 				(*it)->setHiddenShieldDuration(3);
 				if((*it)->getHealth() <= 0) {
 					explosions.push_back(new BigExplosion(r2->getCenterGlobal().first, r2->getCenterGlobal().second, tick_count));
+					erased.push_back(ptr);
 					ships.erase(--(it.base()));
 				}
 
 				break;
 			}
 
-			auto r3 = ShipCollisions(*it);
+			auto r3 = shipCollisions(*it);
 
 			if(r3) {
 				auto ptr = *(--(it.base()));
@@ -290,9 +322,11 @@ public:
 
 				if(r3->getHealth() <= 0) {
 					explosions.push_back(new BigExplosion(r3->getCenterGlobal().first, r3->getCenterGlobal().second, tick_count));
-					ships.erase(--(it.base()));
+					erased.push_back(r3);
+					ships.erase(std::remove(ships.begin(), ships.end(), r3), ships.end());
 				} else if((*it)->getHealth() <= 0) {
 					explosions.push_back(new BigExplosion((*it)->getCenterGlobal().first, (*it)->getCenterGlobal().second, tick_count));
+					erased.push_back(ptr);
 					ships.erase(--(it.base()));
 				}
 
@@ -302,16 +336,18 @@ public:
 
 		for(auto it = powerups.rbegin(); it != powerups.rend(); ++it)
 		{
-			auto r = isNearPowerup(*it);
+			auto r = getCloseToPowerup(*it);
 
 			if(r) {
 				auto ptr = *(--(it.base()));
 
 				ptr->activate(r);
-
+				erased.push_back(ptr);
 				powerups.erase(--(it.base()));
 			}
 		}
+
+		for(auto& el : erased) delete el;
 	}
 
 	/*
@@ -357,15 +393,15 @@ public:
 	 * Getters
 	 */
 
-	auto getShips() {
+	auto& getShips() {
 		return ships;
 	}
 
-	auto GetAsteroids() {
+	auto& GetAsteroids() {
 		return asteroids;
 	}
 
-	auto GetBullets() {
+	auto& GetBullets() {
 		return bullets;
 	}
 

@@ -15,9 +15,9 @@
 #include <utility>
 
 #include "Requests.h"
+#include "World.h"
 
-std::string makeString(boost::asio::streambuf& streambuf)
-{
+std::string makeString(boost::asio::streambuf& streambuf) {
     return {buffers_begin(streambuf.data()), 
             buffers_end(streambuf.data())};
 }
@@ -25,27 +25,22 @@ std::string makeString(boost::asio::streambuf& streambuf)
 //responsible for handling a single client by reading the request message, processing it, and then sending back the response message.
 //Each instance of the Service class is intended to handle one connected client
 //by reading the request message, processing it, and then sending the response message back.
-class Service
-{
+class Service {
 public:
     //The class's constructor accepts a shared pointer to an object representing a socket connected to a particular client as an argument
     // and caches this pointer. This socket will be used later to communicate with the client application.
-    explicit Service(std::shared_ptr<boost::asio::ip::tcp::socket> sock) : m_sock(std::move(sock))
-    {
-    }
+    explicit Service(std::shared_ptr<boost::asio::ip::tcp::socket> sock) : m_sock(std::move(sock)) {}
 
     //This method starts handling the client by initiating the asynchronous reading operation
     //to read the request message from the client specifying the onRequestReceived() method as a callback.
-    void startHandling()
-    {
+    void startHandling() {
 
         boost::asio::async_read_until(*m_sock,
                                m_request,
                                '\n',
                                [this](
                                        const boost::system::error_code &ec,
-                                       std::size_t bytes_transferred)
-                               {
+                                       std::size_t bytes_transferred) {
                                    //When the request reading completes, or an error occurs, the callback method onRequestReceived() is called.
                                    onRequestReceived(ec,
                                                      bytes_transferred);
@@ -54,11 +49,9 @@ public:
 
 private:
     void onRequestReceived(const boost::system::error_code &ec,
-                           std::size_t bytes_transferred)
-    {
+                           std::size_t bytes_transferred) {
         //This method first checks whether the reading succeeded by testing the ec argument that contains the operation completion status code.
-        if (ec.value() != 0)
-        {
+        if (ec.value() != 0) {
             std::cout << "Error occured! Error code = "
                       << ec.value()
                       << ". Message: " << ec.message();
@@ -75,19 +68,16 @@ private:
         boost::asio::async_write(*m_sock, boost::asio::buffer(m_response),
                           [this](
                                   const boost::system::error_code &ec,
-                                  std::size_t bytes_transferred)
-                          {
+                                  std::size_t bytes_transferred) {
                               //The onResponseSent() method is specified as a callback.
                               onResponseSent(ec, bytes_transferred);
                           });
     }
 
     void onResponseSent(const boost::system::error_code &ec,
-                        std::size_t bytes_transferred)
-    {
+                        std::size_t bytes_transferred) {
         // This method first checks whether the operation succeeded.
-        if (ec.value() != 0)
-        {
+        if (ec.value() != 0) {
             // If the operation failed, the corresponding message is output to the standard output stream.
             std::cout << "Error occured! Error code = "
                       << ec.value()
@@ -99,16 +89,14 @@ private:
     }
 
     // Here we perform the cleanup.
-    void onFinish()
-    {
+    void onFinish() {
         //delete this;
     }
 
     //To keep things simple,  we implement a dummy service which only emulates the execution of certain operations
     //The request processing emulation consists of performing many increment operations to emulate operations
     //that intensively consume CPU and then putting the thread of control to sleep for some time to emulate I/O operations
-    static std::string processTCPRequest(boost::asio::streambuf &request)
-    {
+    static std::string processTCPRequest(boost::asio::streambuf &request) {
 
         // In this method we parse the request, process it
         // and prepare the request.
@@ -142,8 +130,7 @@ private:
 
 //responsible for accepting the connection requests arriving from clients and instantiating the objects of the Service class,
 // which will provide the service to connected clients.
-class Acceptor
-{
+class Acceptor {
 public:
     //Its constructor accepts a port number on which it will listen for the incoming connection requests as its input argument.
     Acceptor(boost::asio::io_service &ios, unsigned short port_num) : m_ios(ios),
@@ -153,27 +140,22 @@ public:
                                                                           boost::asio::ip::tcp::endpoint(
                                                                                   boost::asio::ip::address_v4::any(),
                                                                                   port_num)),
-                                                               m_isStopped(false)
-    {
-    }
+                                                               m_isStopped(false) {}
 
     //The Start() method is intended to instruct an object of the Acceptor class to start listening and accepting incoming connection requests.
-    void start()
-    {
+    void start() {
         //It puts the m_acceptor acceptor socket into listening mode
         m_acceptor.listen();
         initAccept();
     }
 
     // Stop accepting incoming connection requests.
-    void stop()
-    {
+    void stop() {
         m_isStopped.store(true);
     }
 
 private:
-    void initAccept()
-    {
+    void initAccept() {
         //constructs an active socket object and initiates the asynchronous accept operation
         std::shared_ptr<boost::asio::ip::tcp::socket>
                 sock(new boost::asio::ip::tcp::socket(m_ios));
@@ -190,15 +172,11 @@ private:
     }
 
     void onAccept(const boost::system::error_code &ec,
-                  std::shared_ptr<boost::asio::ip::tcp::socket> sock)
-    {
-        if (ec.value() == 0)
-        {
+                  std::shared_ptr<boost::asio::ip::tcp::socket> sock) {
+        if (ec.value() == 0) {
             //an instance of the Service class is created and its StartHandling() method is called
             (new Service(std::move(sock)))->startHandling();
-        }
-        else
-        {
+        } else {
             //the corresponding message is output to the standard output stream.
             std::cout << "Error occured! Error code = "
                       << ec.value()
@@ -207,12 +185,9 @@ private:
 
         // Init next async accept operation if
         // acceptor has not been stopped yet.
-        if (!m_isStopped.load())
-        {
+        if (!m_isStopped.load()) {
             initAccept();
-        }
-        else
-        {
+        } else {
             // Stop accepting incoming connections
             // and free allocated resources.
             m_acceptor.close();
@@ -227,11 +202,9 @@ private:
 };
 
 //represents the server itself
-class Server
-{
+class Server {
 public:
-    Server()
-    {
+    Server() {
         m_work = std::make_unique<boost::asio::io_service::work>(m_ios);
     }
 
@@ -240,8 +213,7 @@ public:
     // and the number of threads to add to the pool as input arguments and starts the server
     // Nonblocking Method
     void start(unsigned short port_num,
-               unsigned int thread_pool_size)
-    {
+               unsigned int thread_pool_size) {
 
         assert(thread_pool_size > 0);
 
@@ -251,8 +223,7 @@ public:
 
         // Create specified number of threads and
         // add them to the pool.
-        for (unsigned int i = 0; i < thread_pool_size; i++)
-        {
+        for (unsigned int i = 0; i < thread_pool_size; i++) {
             std::unique_ptr<std::thread> th(
                     new std::thread([this]()
                                     { m_ios.run(); }));
@@ -263,13 +234,11 @@ public:
 
     // Stop the server.
     // Blocks the caller thread until the server is stopped and all the threads running the event loop exit.
-    void stop()
-    {
+    void stop() {
         acc->stop();
         m_ios.stop();
 
-        for (auto &th : m_thread_pool)
-        {
+        for (auto &th : m_thread_pool) {
             th->join();
         }
     }

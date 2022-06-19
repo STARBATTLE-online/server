@@ -1,25 +1,13 @@
 #pragma once
 #include <iostream>
 #include <memory>
-#include "MapCreator.h"
-
-// Request format:
-
-// MAP_WIDTH, MAP_HEIGHT
-// asteroid_count, ship_count
-// for each asteroid:
-//  ASTEROID_TYPE
-//  serialize(asteroid)
-// for each ship:
-//  SHIP
-//  serialize(ship)
-//  
+#include "World.h"
 
 // Singleton
 class RequestManager {
-    static std::shared_ptr<MapCreator> m_map_creator;
+    static std::shared_ptr<World> m_map_creator;
 public:
-    static void setMapCreator(std::shared_ptr<MapCreator> map_creator);
+    static void setWorld(std::shared_ptr<World> map_creator);
 
     static std::string processRequest(std::string request);
     static void initRequest(std::stringstream& ss, std::stringstream& response);
@@ -29,9 +17,9 @@ public:
     static void tickRequest(std::stringstream& ss, std::stringstream& response);
 };
 
-std::shared_ptr<MapCreator> RequestManager::m_map_creator;
+std::shared_ptr<World> RequestManager::m_map_creator;
 
-void RequestManager::setMapCreator(std::shared_ptr<MapCreator> map_creator) {
+void RequestManager::setWorld(std::shared_ptr<World> map_creator) {
     RequestManager::m_map_creator = map_creator;
 }
 
@@ -102,7 +90,7 @@ void RequestManager::mouseButtonRequest(std::stringstream& ss, std::stringstream
     for(auto& ship : ships) {
         if(ship->getPublicKey() == public_key) {
             if(ship->getPrivateKey() == private_key) {
-                RequestManager::m_map_creator->Shoot(ship);
+                RequestManager::m_map_creator->shoot(ship);
                 response << "OK";
                 return;
             } else {

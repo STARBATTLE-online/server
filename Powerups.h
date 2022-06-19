@@ -10,8 +10,7 @@ public:
         this->creation_tick = creation_tick;
     }
 
-    std::string getType() override
-	{
+    std::string getType() override {
 		return "Powerup";
 	}
 
@@ -45,8 +44,7 @@ public:
         this->creation_tick = creation_tick;
     }
 
-    std::string getType() override
-	{
+    std::string getType() override {
 		return "Shield";
 	}
 
@@ -70,8 +68,7 @@ public:
         this->creation_tick = creation_tick;
     }
 
-    std::string getType() override
-	{
+    std::string getType() override {
 		return "Barrage";
 	}
 
