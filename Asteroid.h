@@ -14,31 +14,6 @@ public:
 
 	~Asteroid() override = default;
 
-	virtual bool CheckCollision(MovableSprite *element)
-	{
-		if (element == this)
-		{
-			return false;
-		}
-		else if (Distance(element) < 0)
-		{
-			if (dynamic_cast<Asteroid *>(element))
-			{
-				std::pair<double, double> result = Collide(element);
-				// element->SetSpeed(result.first, result.second);
-				return true;
-			}
-			else
-			{
-				return true;
-			}
-		}
-		else
-		{
-			return false;
-		}
-	}
-
 	std::string Serialize() override
 	{
 		std::stringstream ss;
@@ -47,8 +22,6 @@ public:
 
 		return ss.str();
 	}
-
-private:
 };
 
 class SmallAsteroid : public Asteroid
@@ -56,8 +29,8 @@ class SmallAsteroid : public Asteroid
 public:
 	SmallAsteroid(int x, int y, double speed_x, double speed_y)
 	{
-		width = 44;
-		height = 36;
+		width = 60;
+		height = 50;
 		mass = 6;
 		SetCoordsByCenter(x, y);
 		SetSpeed(speed_x, speed_y);
@@ -67,8 +40,6 @@ public:
 	{
 		return "SmallAsteroid";
 	}
-
-private:
 };
 
 class BigAsteroid : public Asteroid
@@ -76,8 +47,8 @@ class BigAsteroid : public Asteroid
 public:
 	BigAsteroid(int x, int y, double speed_x, double speed_y)
 	{
-		width = 68;
-		height = 60;
+		width = 100;
+		height = 88;
 		mass = 10;
 		SetCoordsByCenter(x, y);
 		SetSpeed(speed_x, speed_y);
@@ -94,6 +65,4 @@ public:
 	{
 		return "BigAsteroid";
 	}
-
-private:
 };

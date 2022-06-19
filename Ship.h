@@ -10,17 +10,17 @@ class Bullet : public MovableSprite
 public:
 	Bullet(int x, int y)
 	{
-		width = 13;
-		height = 13;
+		width = 20;
+		height = 20;
 		global_x = x;
 		global_y = y;
-		mass = 1;
+		mass = 4;
 	};
 
 	Bullet(int x, int y, double x_speed, double y_speed)
 	{
-		width = 13;
-		height = 13;
+		width = 20;
+		height = 20;
 		global_x = x;
 		global_y = y;
 		this->x_speed = x_speed;
@@ -31,7 +31,7 @@ public:
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << "Bullet " << global_x << " " << global_y << " " << x_speed << " " << y_speed;
+		ss << "Bullet " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << x_speed << " " << y_speed;
 
 		return ss.str();
 	}
@@ -56,7 +56,7 @@ public:
 
 		sprite_id = 3; // chosen by fair dice roll. guarenteed to be random
 
-		mass = 5;
+		mass = 10;
 	};
 	~Ship() override = default;
 
@@ -66,8 +66,7 @@ public:
 		global_x += x_speed;
 		Border();
 		UseImpulse();
-		if (reload_time)
-			reload_time--;
+
 		// THIS SEGFEAULTS DONT UNCOMMENT THIS LINE
 		/*
 			if (dynamic_cast<Shield*>(power))
@@ -77,13 +76,19 @@ public:
 		*/
 	}
 
+	void Tick() {
+		if (reload_time)
+			--reload_time;
 
+		if (protection)
+			--protection;
+	}
 
 	void PowersHandler()
 	{
 		if (dynamic_cast<Shield *>(power))
 		{
-			power->SetCoords(GetCenterGlobal().first - power->GetSize().first / 2, GetCenterGlobal().second - power->GetSize().second / 2);
+			power->SetCoords(GetCoordsGlobal().first - power->GetSize().first / 2, GetCoordsGlobal().second - power->GetSize().second / 2);
 		}
 		else if (dynamic_cast<Rocket *>(power))
 		{
@@ -197,12 +202,22 @@ public:
 		return reload_time;
 	}
 
+	double GetSpeedCeiling() override {
+		return 50.;
+	}
+
+	void TakeDamage(int damage) {
+		if(protection > 0) return;
+
+		hp -= damage;
+	}
+
 protected:
 	HeadSprite *power; //?
 	Rotation rotation;
 	double impulse = 1.01;
 	double control_impulse = 0.01;
-	double engine_power_speed = 4;
+	double engine_power_speed = 10;
 
 	int reload_time = 0;
 
@@ -210,7 +225,9 @@ protected:
 	uint64_t public_key = 0;
 
 	uint64_t sprite_id = 0;
-
+	int hp = 10; 
 	int mouse_x = 0;
 	int mouse_y = 0;
+
+	int protection = 0;
 };
