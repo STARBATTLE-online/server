@@ -33,7 +33,7 @@ public:
 	virtual bool tick() {
 		std::lock_guard<std::mutex> lock(map_manager->mt);
 
-		map_manager->CheckCollisionsAll();
+		map_manager->checkAllCollisions();
 		map_manager->tick();
 
 		//std::cout << map_manager->serialize() << "\n";
@@ -84,8 +84,8 @@ int main()
 			//before starting the server, the optimal size of the pool is calculated.
 			// The general formula often used in parallel applications to find the optimal number of threads is the number of processors the computer has multiplied by 2.
 			// We use the std::thread::hardware_concurrency() static method to obtain the number of processors.
-			unsigned int thread_pool_size =
-				std::thread::hardware_concurrency() * 2;
+			unsigned int thread_pool_size = 
+				1; //std::thread::hardware_concurrency() * 2;
 
 			//because this method may fail to do its job returning 0,
 			// we fall back to default value represented by the constant DEFAULT_THREAD_POOL_SIZE, which is equal to 2 in our case.

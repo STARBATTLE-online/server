@@ -13,7 +13,11 @@
 class MapCreator
 {
 public:
-	MapCreator(){		
+	MapCreator(){	
+		asteroids.reserve(64);
+		ships.reserve(64);
+		bullets.reserve(64);
+
 		for (int i = 0; i < NUM_ASTEROIDS_BIG + NUM_ASTEROIDS_SMALL; i++)
 		{
 			if (i < NUM_ASTEROIDS_BIG)
@@ -44,7 +48,7 @@ public:
 
 	// TODO: Verify that this works
 	void Shoot(double target_x, double target_y, Ship* ship) {
-		if(ship->GetReloadTime() != 0) return;
+		if(ship->getReloadTime() != 0) return;
 		// Calculate target angle
 		double target_angle = atan2(target_y - ship->getCenterGlobal().second, target_x - ship->getCenterGlobal().first);
 		// Calculate speed along axises
@@ -55,7 +59,7 @@ public:
 		// Set bullet speed
 		bullets.back()->setSpeed(x_speed, y_speed);
 		bullets.back()->sender_id = ship->getPublicKey();
-		ship->SetReloadTime(RELOAD_TIME);
+		ship->setReloadTime(RELOAD_TIME);
 	}
 
 	Asteroid* AsteroidCollisions(MovableSprite* object) {
@@ -104,7 +108,7 @@ public:
 	 */
 	Ship* AddShip(int x, int y, Rotation rot) {
 		ships.push_back(new Ship(192, 192));
-		ships.back()->SetRotation(rot);
+		ships.back()->setRotation(rot);
 		ships.back()->setCoords(x, y);
 
 		return ships.back();
@@ -129,6 +133,50 @@ public:
 		{
 			ship->move();
 			ship->tick();
+
+			if(ship->getBarrageDuration() > 0) {
+					constexpr const int mod = 10;
+					auto r = (199 - ship->getBarrageDuration()) % (6 * mod);
+					
+					auto position = ship->getCenterGlobal();
+					const int barrage_speed_multiplier = 5;
+					switch(r) {
+						case 1:
+							bullets.push_back(new Bullet(position.first, position.second, 0, -5 * barrage_speed_multiplier));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod:
+							bullets.push_back(new Bullet(position.first, position.second, 2.2 * barrage_speed_multiplier, -2.2 * barrage_speed_multiplier));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod * 2:
+							bullets.push_back(new Bullet(position.first, position.second, 5 * barrage_speed_multiplier, 0));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod * 3:
+							bullets.push_back(new Bullet(position.first, position.second, 2.2 * barrage_speed_multiplier, 2.2 * barrage_speed_multiplier));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod * 4:
+							bullets.push_back(new Bullet(position.first, position.second, 0, 5 * barrage_speed_multiplier));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod * 5:
+							bullets.push_back(new Bullet(position.first, position.second, -2.2 * barrage_speed_multiplier, 2.2 * barrage_speed_multiplier));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod * 6:
+							bullets.push_back(new Bullet(position.first, position.second, -5 * barrage_speed_multiplier, 0));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						case 1 + mod * 7:
+							bullets.push_back(new Bullet(position.first, position.second, -2.2 * barrage_speed_multiplier, -2.2 * barrage_speed_multiplier));
+							bullets.back()->sender_id = ship->getPublicKey();
+							break;
+						default:
+							break;
+					}
+			}
 		}
 		for (auto bullet : bullets)
 		{
@@ -150,12 +198,12 @@ public:
 			return powerup->getCreationTick() + 250 < tick_count;
 		});
 
-		TryGeneratelAsteroid();
+		tryGenerateAsteroid();
 
 		++tick_count;
 	}
 
-	void TryGeneratelAsteroid() {	
+	void tryGenerateAsteroid() {	
 		if(asteroids.size() >= NUM_ASTEROIDS_BIG + NUM_ASTEROIDS_SMALL) return;
 
 		asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, (double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
@@ -165,7 +213,7 @@ public:
 	 * Performs collision checks between all the objects on the game field (that should collide) and
 	 * handles their resolution.
 	 */
-	void CheckCollisionsAll() {
+	void checkAllCollisions() {
 		for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
 		{
 			auto r = BulletCollisions(*it);
@@ -183,34 +231,73 @@ public:
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 				}
 
-				if(ptr->getType() == "SmallAsteroid" && (rand() % 100 > 30)) {
-					powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
+				if(ptr->getType() == "SmallAsteroid") {
+					if(rand() % 100 > 90) {
+						powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
+					} else if(rand() % 100 > 88) {
+						powerups.push_back(new Barrage(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
+					}
 				}
 
 				asteroids.erase(--(it.base()));
 				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
+				break;
 			}
 
 			AsteroidCollisions(*it);
 		}
 		for (auto it = ships.rbegin(); it != ships.rend(); ++it)
 		{
-			auto r = BulletCollisions(*it, (*it)->getPublicKey());
+			auto r1 = BulletCollisions(*it, (*it)->getPublicKey());
 
-			if(r) {
+			if(r1) {
 				auto ptr = *(--(it.base()));
-				scores[r->sender_id] += (*it)->getDestructionScore();
-				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
+				scores[r1->sender_id] += (*it)->getDestructionScore();
+				explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
 
-				(*it)->TakeDamage(2);
-				if((*it)->GetHealth() <= 0)
+				(*it)->takeDamage(2);
+				if((*it)->getHealth() <= 0)
 					ships.erase(--(it.base()));
 
-				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
+				bullets.erase(std::remove(bullets.begin(), bullets.end(), r1), bullets.end());
+				break;
 			}
 			
-			AsteroidCollisions(*it);
-			ShipCollisions(*it);
+			auto r2 = AsteroidCollisions(*it);
+
+			if(r2) {
+				auto ptr = *(--(it.base()));
+
+				(*it)->takeDamage(((r2->getType() == "BigAsteroid") ? 3 : 2));
+				(*it)->setHiddenShieldDuration(3);
+				if((*it)->getHealth() <= 0) {
+					explosions.push_back(new BigExplosion(r2->getCenterGlobal().first, r2->getCenterGlobal().second, tick_count));
+					ships.erase(--(it.base()));
+				}
+
+				break;
+			}
+
+			auto r3 = ShipCollisions(*it);
+
+			if(r3) {
+				auto ptr = *(--(it.base()));
+
+				(*it)->takeDamage(3);
+				r3->takeDamage(3);
+				(*it)->setHiddenShieldDuration(5);
+				r3->setHiddenShieldDuration(5);
+
+				if(r3->getHealth() <= 0) {
+					explosions.push_back(new BigExplosion(r3->getCenterGlobal().first, r3->getCenterGlobal().second, tick_count));
+					ships.erase(--(it.base()));
+				} else if((*it)->getHealth() <= 0) {
+					explosions.push_back(new BigExplosion((*it)->getCenterGlobal().first, (*it)->getCenterGlobal().second, tick_count));
+					ships.erase(--(it.base()));
+				}
+
+				break;
+			}
 		}
 
 		for(auto it = powerups.rbegin(); it != powerups.rend(); ++it)

@@ -4,11 +4,9 @@
 #include "Rotation.h"
 
 //????? ????? ??? ?????, ???? ?? ???????? ???????
-class Bullet : public MovableSprite
-{
+class Bullet : public MovableSprite {
 public:
-	Bullet(int x, int y)
-	{
+	Bullet(int x, int y) {
 		width = 20;
 		height = 20;
 		global_x = x;
@@ -16,8 +14,7 @@ public:
 		mass = 4;
 	};
 
-	Bullet(int x, int y, double x_speed, double y_speed)
-	{
+	Bullet(int x, int y, double x_speed, double y_speed) {
 		width = 20;
 		height = 20;
 		global_x = x;
@@ -26,8 +23,7 @@ public:
 		this->y_speed = y_speed;
 	};
 
-	std::string serialize() override
-	{
+	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
 		ss << "Bullet " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << x_speed << " " << y_speed;
@@ -35,18 +31,16 @@ public:
 		return ss.str();
 	}
 
-	~Bullet(){};
+	~Bullet() = default;
 
 	int lifespan = 80;
 	uint64_t sender_id = 0;
 };
 
-class Ship : public MovableSprite
-{
+class Ship : public MovableSprite {
 public:
-	Ship(){};
-	Ship(double sprite_width, double sprite_height)
-	{
+	Ship() = default;
+	Ship(double sprite_width, double sprite_height) {
 		width = sprite_width;
 		height = sprite_height;
 
@@ -57,14 +51,22 @@ public:
 
 		mass = 10;
 	};
+
 	~Ship() override = default;
 
-	void move() override
-	{
+	void move() override {
 		global_y += y_speed;
 		global_x += x_speed;
 		border();
 		useImpulse();
+	}
+
+	double getRadius() override {
+		if(protection > 0) {
+			return 140;
+		} else {
+			return (height + width) / 4.0;
+		}
 	}
 
 	void tick() {
@@ -73,10 +75,15 @@ public:
 
 		if (protection)
 			--protection;
+
+		if (hidden_protection) 
+			--hidden_protection;
+
+		if (barrage_duration) 
+			--barrage_duration;
 	}
 
-	void useImpulse()
-	{
+	void useImpulse() {
 		x_speed /= impulse;
 		y_speed /= impulse;
 		if (abs(x_speed) < control_impulse)
@@ -89,10 +96,8 @@ public:
 		}
 	}
 
-	void setMovementDirection(FRKey k)
-	{
-		switch (k)
-		{
+	void setMovementDirection(FRKey k) {
+		switch (k) {
 		case FRKey::RIGHT:
 			x_speed = engine_power_speed;
 			break;
@@ -110,38 +115,36 @@ public:
 		}
 	}
 
-	void SendMouseMoveEvent(int x, int y)
-	{
+	void sendMouseMoveEvent(int x, int y) {
 		mouse_x = x;
 		mouse_y = y;
 	};
+
+	void setBarrageDuration(int duration) {
+		barrage_duration = duration;
+	}
 
 	uint64_t getDestructionScore() override {
 		return 100;
 	}
 
-	uint64_t getPrivateKey()
-	{
+	uint64_t getPrivateKey() {
 		return private_key;
 	}
 
-	uint64_t getPublicKey()
-	{
+	uint64_t getPublicKey() {
 		return public_key;
 	}
 
-	uint64_t getSpriteID()
-	{
+	uint64_t getSpriteID() {
 		return sprite_id;
 	}
 
-	Rotation getRotation()
-	{
+	Rotation getRotation() {
 		return rotation;
 	}
 
-	std::string serialize() override
-	{
+	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
 		ss << getType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
@@ -149,27 +152,23 @@ public:
 		return ss.str();
 	}
 
-	void SetRotation(Rotation rot)
-	{
+	void setRotation(Rotation rot) {
 		rotation = rot;
 	}
 
-	std::string getType() override
-	{
+	std::string getType() override {
 		return "Ship";
 	}
 
-	std::pair<double, double> GetMouseCoords()
-	{
+	std::pair<double, double> GetMouseCoords() {
 		return std::make_pair(mouse_x, mouse_y);
 	}
 
-	void SetReloadTime(int time)
-	{
+	void setReloadTime(int time) {
 		reload_time = time;
 	}
 
-	int GetReloadTime()
+	int getReloadTime()
 	{
 		return reload_time;
 	}
@@ -178,21 +177,29 @@ public:
 		return 50.;
 	}
 
-	void TakeDamage(int damage) {
-		if(protection > 0) return;
+	int getBarrageDuration() {
+		return barrage_duration;
+	}
+
+	void takeDamage(int damage) {
+		if(protection > 0 || hidden_protection > 0) return;
 
 		hp -= damage;
 	}
 
-	int GetHealth() {
+	int getHealth() {
 		return hp;
 	}
 
-	void SetShieldDuration(int duration) {
+	void setShieldDuration(int duration) {
 		protection = duration;
 	}
 
-	int GetShieldDuration() {
+	void setHiddenShieldDuration(int duration) {
+		hidden_protection = duration;
+	}
+
+	int getShieldDuration() {
 		return protection;
 	}
 
@@ -213,4 +220,6 @@ protected:
 	int mouse_y = 0;
 
 	int protection = 200;
+	int hidden_protection = 0;
+	int barrage_duration = 0;
 };

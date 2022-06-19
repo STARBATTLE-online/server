@@ -56,6 +56,31 @@ public:
      * Is supposed to modify the ship 
      */
     void activate(Ship* ship) override {
-        ship->SetShieldDuration(200);
+        ship->setShieldDuration(200);
+    }
+};
+
+class Barrage : public Powerup {
+public:
+    Barrage(int x, int y, uint64_t creation_tick) {
+        width = 126;
+        height = 126;
+
+        setCoordsByCenter(x, y);
+        this->creation_tick = creation_tick;
+    }
+
+    std::string getType() override
+	{
+		return "Barrage";
+	}
+
+    ~Barrage() override = default;
+
+    /* 
+     * Is supposed to modify the ship 
+     */
+    void activate(Ship* ship) override {
+        ship->setBarrageDuration(200);
     }
 };
