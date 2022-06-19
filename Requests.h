@@ -74,8 +74,8 @@ void RequestManager::MouseMoveRequest(std::stringstream& ss, std::stringstream& 
     auto ships = RequestManager::m_map_creator->GetShips();
 
     for(auto& ship : ships) {
-        if(ship->GetPublicKey() == public_key) {
-            if(ship->GetPrivateKey() == private_key) {
+        if(ship->getPublicKey() == public_key) {
+            if(ship->getPrivateKey() == private_key) {
                 ship->SendMouseMoveEvent(mouse_x, mouse_y);
                 ship->SetRotation(RotationFromString(rotation));
                 response << "OK";
@@ -103,8 +103,8 @@ void RequestManager::MouseButtonRequest(std::stringstream& ss, std::stringstream
     auto ships = RequestManager::m_map_creator->GetShips();
 
     for(auto& ship : ships) {
-        if(ship->GetPublicKey() == public_key) {
-            if(ship->GetPrivateKey() == private_key) {
+        if(ship->getPublicKey() == public_key) {
+            if(ship->getPrivateKey() == private_key) {
                 RequestManager::m_map_creator->Shoot(ship);
                 response << "OK";
                 return;
@@ -125,8 +125,8 @@ void RequestManager::KeyRequest(std::stringstream& ss, std::stringstream& respon
     auto ships = RequestManager::m_map_creator->GetShips();
 
     for(auto& ship : ships) {
-        if(ship->GetPublicKey() == public_key) {
-            if(ship->GetPrivateKey() == private_key) {
+        if(ship->getPublicKey() == public_key) {
+            if(ship->getPrivateKey() == private_key) {
                 if(key == "L") {
                     ship->MoveManual(FRKey::LEFT);
                 } else if(key == "R") {
@@ -155,8 +155,8 @@ void RequestManager::InitRequest(std::stringstream& ss, std::stringstream& respo
     
     auto r = RequestManager::m_map_creator->AddShip(rand() % 1000, rand() % 1000, Rotation::Top);
     auto coords = r->GetCoordsGlobal();
-    response << "INIT " << std::to_string(r->GetPublicKey()) << " " << std::to_string(r->GetPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
-            << std::to_string((int)coords.second) << " " << std::to_string(r->GetSpriteID()) << " " << std::to_string(MAP_WIDTH) << " " << std::to_string(MAP_HEIGHT);
+    response << "INIT " << std::to_string(r->getPublicKey()) << " " << std::to_string(r->getPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
+            << std::to_string((int)coords.second) << " " << std::to_string(r->getSpriteID()) << " " << std::to_string(MAP_WIDTH) << " " << std::to_string(MAP_HEIGHT);
 }
 
 void RequestManager::TickRequest(std::stringstream& ss, std::stringstream& response) {

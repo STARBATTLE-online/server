@@ -7,6 +7,9 @@
 
 #include "GlobalVariables.h"
 
+/*
+ * Base class for all objects on the map
+ */
 class HeadSprite {
 public:	
 	HeadSprite() {};
@@ -35,13 +38,13 @@ public:
 		return (height + width) / 4.0;
 	}
 
-	virtual std::pair<double, double> GetCenterGlobal() {
+	virtual std::pair<double, double> getCenterGlobal() {
 		return std::make_pair(global_x + width / 2, global_y + height / 2);
 	}
 
 	double Distance(HeadSprite* object) {
-		return sqrt(pow(GetCenterGlobal().first - object->GetCenterGlobal().first, 2)
-			+ pow(GetCenterGlobal().second - object->GetCenterGlobal().second, 2))
+		return sqrt(pow(getCenterGlobal().first - object->getCenterGlobal().first, 2)
+			+ pow(getCenterGlobal().second - object->getCenterGlobal().second, 2))
 			- GetRadius() - object->GetRadius();
 	}
 

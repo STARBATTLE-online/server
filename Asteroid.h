@@ -18,7 +18,7 @@ public:
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second;
+		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second;
 
 		return ss.str();
 	}

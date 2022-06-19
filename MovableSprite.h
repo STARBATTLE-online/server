@@ -93,8 +93,8 @@ public:
 	virtual bool CheckCollision(MovableSprite *element)
 	{
 		if(element == this) return false;
-		auto original = element->GetCenterGlobal();
-		element->SetCoordsByCenter(element->GetCenterGlobal().first - MAP_WIDTH, element->GetCenterGlobal().second - MAP_HEIGHT);
+		auto original = element->getCenterGlobal();
+		element->SetCoordsByCenter(element->getCenterGlobal().first - MAP_WIDTH, element->getCenterGlobal().second - MAP_HEIGHT);
 		for(int i = -1; i <= 1; ++i) {
 			for(int j = -1; j <= 1; ++j) {
 				auto r = Distance(element);
@@ -115,9 +115,9 @@ public:
 					}
 				}
 
-				element->SetCoordsByCenter(element->GetCenterGlobal().first, element->GetCenterGlobal().second + MAP_HEIGHT);
+				element->SetCoordsByCenter(element->getCenterGlobal().first, element->getCenterGlobal().second + MAP_HEIGHT);
 			}
-			element->SetCoordsByCenter(element->GetCenterGlobal().first + MAP_WIDTH, element->GetCenterGlobal().second - 2 * MAP_HEIGHT);
+			element->SetCoordsByCenter(element->getCenterGlobal().first + MAP_WIDTH, element->getCenterGlobal().second - 2 * MAP_HEIGHT);
 		}
 		element->SetCoordsByCenter(original.first, original.second);
 		return false;
@@ -125,21 +125,21 @@ public:
 
 	virtual std::pair<double, double> Collide(MovableSprite *element)
 	{
-		double distanceSquared = pow(GetCenterGlobal().first - element->GetCenterGlobal().first, 2) + pow(GetCenterGlobal().second - element->GetCenterGlobal().second, 2);
+		double distanceSquared = pow(getCenterGlobal().first - element->getCenterGlobal().first, 2) + pow(getCenterGlobal().second - element->getCenterGlobal().second, 2);
 
 		double distance = sqrt(distanceSquared);
 
 		double overlap = (distance - (GetRadius() + element->GetRadius())) / 2.;
 
-		double moveX = (overlap * (GetCenterGlobal().first - element->GetCenterGlobal().first)) / distance * 2;
-		double moveY = (overlap * (GetCenterGlobal().second - element->GetCenterGlobal().second)) / distance * 2;
+		double moveX = (overlap * (getCenterGlobal().first - element->getCenterGlobal().first)) / distance * 2;
+		double moveY = (overlap * (getCenterGlobal().second - element->getCenterGlobal().second)) / distance * 2;
 
-		SetCoordsByCenter(GetCenterGlobal().first - moveX, GetCenterGlobal().second - moveY);
-		element->SetCoordsByCenter(element->GetCenterGlobal().first + moveX, element->GetCenterGlobal().second + moveY);
+		SetCoordsByCenter(getCenterGlobal().first - moveX, getCenterGlobal().second - moveY);
+		element->SetCoordsByCenter(element->getCenterGlobal().first + moveX, element->getCenterGlobal().second + moveY);
 
 		// Find normal vector
-		double normalX = -(GetCenterGlobal().first - element->GetCenterGlobal().first) / distance;
-		double normalY = -(GetCenterGlobal().second - element->GetCenterGlobal().second) / distance;
+		double normalX = -(getCenterGlobal().first - element->getCenterGlobal().first) / distance;
+		double normalY = -(getCenterGlobal().second - element->getCenterGlobal().second) / distance;
 
 		// Find tangent vector
 		double tangentX = -normalY;
