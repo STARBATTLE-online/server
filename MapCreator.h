@@ -2,6 +2,9 @@
 #include "Asteroid.h"
 #include "Ship.h"
 #include "Rotation.h"
+#include "Explosion.h"
+
+#include <ranges>
 
 class MapCreator //�������� ����� ��������� �� �����
 {
@@ -23,7 +26,7 @@ public:
 
 		for(auto astroid : asteroids)
 		{
-			while (AsteroidShipCollisions(astroid))
+			while (AsteroidCollisions(astroid))
 			{
 				astroid->SetCoords(rand() % MAP_WIDTH, rand() % MAP_HEIGHT);
 			}
@@ -53,72 +56,36 @@ public:
 		ship->SetReloadTime(RELOAD_TIME);
 	}
 
-	bool AsteroidShipCollisions(MovableSprite* object) {
-		
-		for (auto astroid_check : asteroids)
+	Asteroid* AsteroidCollisions(MovableSprite* object) {
+		for (auto& asteroid : asteroids)
 		{
-			if (dynamic_cast<Ship*>(object))
-			{
-				if (object->Distance(astroid_check) < 50)
-				{
-					return true;
-				}
-			}
-			else if (dynamic_cast<Asteroid*>(object))
-			{
-				if (astroid_check->CheckCollision(object))
-				{
-					return true;
-				}
+			if(asteroid->CheckCollision(object)) {
+				return asteroid;
 			}
 		}
-		return false;
+		return nullptr;
 	}
 
-	bool BulletAsteroidCollisions(MovableSprite* object) {
-		for(auto bullet : bullets)
+	Bullet* BulletCollisions(MovableSprite* object, uint64_t exemptKey = 0) {
+		for (auto& bullet : bullets)
 		{
-			if(bullet->CheckCollision(object))
-			{
-				return true;
+			if(bullet->sender_id == exemptKey) continue;
+			if(bullet->CheckCollision(object)) {
+				return bullet;
 			}
 		}
-
-		return false;
+		return nullptr;
 	}
 
-	bool BulletShipCollisions(Ship* ship) {
-		bool collisions = std::any_of(bullets.begin(), bullets.end(), [&](Bullet* bullet) {
-			return ship->GetPublicKey() != bullet->sender_id && bullet->CheckCollision(ship);
-		});
-
-		return false;
-	}
-
-	bool AllShipsCheckCollision(MovableSprite* object) {
-		if (dynamic_cast<Ship*>(object))
+	Ship* ShipCollisions(MovableSprite* object) {
+		for (auto& ship : ships)
 		{
-			for (auto enemy : ships)
-			{
-				if (dynamic_cast<Ship*>(object))
-				{
-					if (enemy->Distance(object) < 300)
-					{
-						return true;
-					}
-				}
-				else
-				{
-					if (enemy->CheckCollision(object))
-					{
-						return true;
-					}
-				}
+			if(ship->CheckCollision(object)) {
+				return ship;
 			}
 		}
-		return false;
+		return nullptr;
 	}
-
 
 	//���� ��� "�����������"
 	void ObserverSubscribes() {
@@ -129,7 +96,7 @@ public:
 	}
 
 	Ship* AddShip(int x, int y, Rotation rot) {
-		ships.push_back(new Ship(96, 96));
+		ships.push_back(new Ship(192, 192));
 		ships.back()->SetRotation(rot);
 		ships.back()->SetCoords(x, y);
 
@@ -158,6 +125,7 @@ public:
 		for (auto ship : ships)
 		{
 			ship->Move();
+			ship->Tick();
 		}
 		for (auto bullet : bullets)
 		{
@@ -169,24 +137,41 @@ public:
 		std::erase_if(bullets, [](Bullet* bullet) {
 			return bullet->lifespan <= 0;
 		});
+
+		// Remove explosions that have already finished
+		std::erase_if(explosions, [this](Explosion* explosion) {
+			return explosion->GetCreationTick() + 100 < tick_count;
+		});
+
+		++tick_count;
 	}
 
 	void CheckCollisionsAll() {
-		for (auto astroid : asteroids)
+		for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
 		{
-			AsteroidShipCollisions(astroid);
-			BulletAsteroidCollisions(astroid);
+			auto r = BulletCollisions(*it);
+	
+			if(r) {
+				explosions.push_back(new BigExplosion(r->GetCenterGlobal().first, r->GetCenterGlobal().second, tick_count));
+				asteroids.erase(--(it.base()));
+				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
+			}
+
+			AsteroidCollisions(*it);
 		}
 		for (auto ship : ships)
 		{
-			BulletShipCollisions(ship);
-			AllShipsCheckCollision(ship);
+			BulletCollisions(ship, ship->GetPublicKey());
+			AsteroidCollisions(ship);
+			ShipCollisions(ship);
 		}
 	}
 
 	std::string Serialize() {
 		std::stringstream ss;
 		
+		ss << tick_count << " ";
+
 		for (auto astroid : asteroids)
 		{
 			ss << astroid->Serialize() << " ";
@@ -200,6 +185,11 @@ public:
 		for (auto bullet : bullets)
 		{
 			ss << bullet->Serialize() << " ";
+		}
+
+		for (auto explosion : explosions)
+		{
+			ss << explosion->Serialize() << " ";
 		}
 
 		return ss.str();
@@ -223,4 +213,7 @@ protected:
 	std::vector<Asteroid*> asteroids;
 	std::vector<Ship*> ships;
 	std::vector<Bullet*> bullets;
+	std::vector<Explosion*> explosions;
+
+	uint64_t tick_count = 0;
 };
