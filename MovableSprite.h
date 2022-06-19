@@ -169,6 +169,10 @@ public:
 	virtual double GetSpeedCeiling() {
 		return 3.;
 	}
+
+	virtual uint64_t GetDestructionScore() {
+		return 1;
+	}
 protected:
 	double y_speed = 0.;
 	double x_speed = 0.;
