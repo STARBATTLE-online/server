@@ -30,7 +30,7 @@ public:
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << "Bullet " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << x_speed << " " << y_speed;
+		ss << "Bullet " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << x_speed << " " << y_speed;
 
 		return ss.str();
 	}
@@ -130,27 +130,26 @@ public:
 		mouse_y = y;
 	};
 
-	void SendKeyPressEvent(FRKey k)
-	{
-		MoveManual(k);
-	};
+	uint64_t GetDestructionScore() override {
+		return 100;
+	}
 
-	uint64_t GetPrivateKey()
+	uint64_t getPrivateKey()
 	{
 		return private_key;
 	}
 
-	uint64_t GetPublicKey()
+	uint64_t getPublicKey()
 	{
 		return public_key;
 	}
 
-	uint64_t GetSpriteID()
+	uint64_t getSpriteID()
 	{
 		return sprite_id;
 	}
 
-	Rotation GetRotation()
+	Rotation getRotation()
 	{
 		return rotation;
 	}
@@ -159,7 +158,7 @@ public:
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << GetRotation() << " " << GetSpriteID() << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << GetPublicKey() << " ";
+		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
 
 		return ss.str();
 	}
@@ -199,6 +198,10 @@ public:
 		hp -= damage;
 	}
 
+	int GetHealth() {
+		return hp;
+	}
+
 	void SetShieldDuration(int duration) {
 		protection = duration;
 	}
@@ -223,5 +226,5 @@ protected:
 	int mouse_x = 0;
 	int mouse_y = 0;
 
-	int protection = 0;
+	int protection = 200;
 };

@@ -18,7 +18,7 @@ public:
     std::string Serialize() override {
         std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second << " " << creation_tick;
+		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << creation_tick;
 
 		return ss.str();
     }

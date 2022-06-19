@@ -7,12 +7,13 @@
 
 #include <ranges>
 
-class MapCreator //�������� ����� ��������� �� �����
+/*
+ * This class is used for storing and managing all the game state.
+ */
+class MapCreator
 {
 public:
-	MapCreator(){
-		ObserverSubscribes();
-		
+	MapCreator(){		
 		for (int i = 0; i < NUM_ASTEROIDS_BIG + NUM_ASTEROIDS_SMALL; i++)
 		{
 			if (i < NUM_ASTEROIDS_BIG)
@@ -45,15 +46,15 @@ public:
 	void Shoot(double target_x, double target_y, Ship* ship) {
 		if(ship->GetReloadTime() != 0) return;
 		// Calculate target angle
-		double target_angle = atan2(target_y - ship->GetCenterGlobal().second, target_x - ship->GetCenterGlobal().first);
+		double target_angle = atan2(target_y - ship->getCenterGlobal().second, target_x - ship->getCenterGlobal().first);
 		// Calculate speed along axises
 		double x_speed = cos(target_angle) * BULLET_SPEED;
 		double y_speed = sin(target_angle) * BULLET_SPEED;
 		// Create bullet
-		bullets.push_back(new Bullet(ship->GetCenterGlobal().first, ship->GetCenterGlobal().second, x_speed, y_speed));
+		bullets.push_back(new Bullet(ship->getCenterGlobal().first, ship->getCenterGlobal().second, x_speed, y_speed));
 		// Set bullet speed
 		bullets.back()->SetSpeed(x_speed, y_speed);
-		bullets.back()->sender_id = ship->GetPublicKey();
+		bullets.back()->sender_id = ship->getPublicKey();
 		ship->SetReloadTime(RELOAD_TIME);
 	}
 
@@ -98,14 +99,9 @@ public:
 		return nullptr;
 	}
 
-	//���� ��� "�����������"
-	void ObserverSubscribes() {
-		//mouse_click_event->Subscribe();
-		//key_press_event->Subscribe(&main_hero);
-		//mouse_move_event->Subscribe(&main_hero);
-		//mouse_move_event->Subscribe(&(inter.GetReticle()));
-	}
-
+	/*
+	 * Adds a ship with the specified position and rotation to the game field.
+	 */
 	Ship* AddShip(int x, int y, Rotation rot) {
 		ships.push_back(new Ship(192, 192));
 		ships.back()->SetRotation(rot);
@@ -113,21 +109,17 @@ public:
 
 		return ships.back();
 	}
-
-	void DeleteShip(int x, int y, Rotation rot) {
-		//����� ����� ���������� � ������
-	}
-
-	void MapResize() {
-		//����� ����������� ����� ������ ��� �������������. ����� ����������� - �����������.
-	}
 	
+    /*
+	 * Adds an asteroid with the specified position and rotation to the game field.
+	 */
 	void AddAsteroid(int x, int y, Rotation rot) {
-		//����� ���� ������������� - ��������� ���������. ���� �������� �������� �� ��, ���� �������� �� �������� ���� ��� ������� ��� ������ ����������.
-		//AllAsteroidsCheckCollision � AllShipsCheckCollision ������ �������, �� �� �������, ��� ������ ���� ��������?
 		asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, rand() % 10 - 5, rand() % 10 - 5));
 	}
 
+	/*
+	 * Advances the game state by 1 frame.
+	 */
 	void Tick() {
 		for (auto astroid : asteroids)
 		{
@@ -169,7 +161,10 @@ public:
 		asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, (double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 	}
 
-
+	/*
+	 * Performs collision checks between all the objects on the game field (that should collide) and
+	 * handles their resolution.
+	 */
 	void CheckCollisionsAll() {
 		for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
 		{
@@ -177,18 +172,19 @@ public:
 	
 			if(r) {
 				auto ptr = *(--(it.base()));
+				scores[r->sender_id] += (*it)->GetDestructionScore();
 
-				explosions.push_back(new BigExplosion(r->GetCenterGlobal().first, r->GetCenterGlobal().second, tick_count));
+				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
 				if(ptr->GetType() == "BigAsteroid") {
-					asteroids.push_back(new SmallAsteroid(ptr->GetCenterGlobal().first - 5 + (rand() % 5), ptr->GetCenterGlobal().second - 5 + (rand() % 5), 
+					asteroids.push_back(new SmallAsteroid(ptr->getCenterGlobal().first - 5 + (rand() % 5), ptr->getCenterGlobal().second - 5 + (rand() % 5), 
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 
-					asteroids.push_back(new SmallAsteroid(ptr->GetCenterGlobal().first - 5 + (rand() % 5), ptr->GetCenterGlobal().second - 5 + (rand() % 5), 
+					asteroids.push_back(new SmallAsteroid(ptr->getCenterGlobal().first - 5 + (rand() % 5), ptr->getCenterGlobal().second - 5 + (rand() % 5), 
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 				}
 
 				if(ptr->GetType() == "SmallAsteroid" && (rand() % 100 > 30)) {
-					powerups.push_back(new Shield(ptr->GetCenterGlobal().first, ptr->GetCenterGlobal().second, tick_count));
+					powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 				}
 
 				asteroids.erase(--(it.base()));
@@ -199,14 +195,17 @@ public:
 		}
 		for (auto it = ships.rbegin(); it != ships.rend(); ++it)
 		{
-			auto r = BulletCollisions(*it, (*it)->GetPublicKey());
+			auto r = BulletCollisions(*it, (*it)->getPublicKey());
 
 			if(r) {
 				auto ptr = *(--(it.base()));
+				scores[r->sender_id] += (*it)->GetDestructionScore();
+				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
 
-				explosions.push_back(new BigExplosion(r->GetCenterGlobal().first, r->GetCenterGlobal().second, tick_count));
+				(*it)->TakeDamage(2);
+				if((*it)->GetHealth() <= 0)
+					ships.erase(--(it.base()));
 
-				ships.erase(--(it.base()));
 				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
 			}
 			
@@ -228,6 +227,10 @@ public:
 		}
 	}
 
+	/*
+	 * Serializes the game state into a single string that can
+	 * be accepted by the game client.
+	 */
 	std::string Serialize() {
 		std::stringstream ss;
 		
@@ -240,7 +243,7 @@ public:
 
 		for (auto ship : ships)
 		{
-			ss << ship->Serialize() << " " ;//<< scores[ship->GetPrivateKey()] << " ";
+			ss << ship->Serialize() << " " << scores[ship->getPrivateKey()] << " ";
 		}
 
 		for (auto bullet : bullets)
@@ -263,6 +266,9 @@ public:
 	
 	std::mutex mt;
 
+	/*
+	 * Getters
+	 */
 
 	auto GetShips() {
 		return ships;
@@ -275,7 +281,9 @@ public:
 	auto GetBullets() {
 		return bullets;
 	}
+
 protected:
+	/* We use vectors of pointers instead of values because we want to use inheritance */
 	std::vector<Asteroid*> asteroids;
 	std::vector<Ship*> ships;
 	std::vector<Bullet*> bullets;

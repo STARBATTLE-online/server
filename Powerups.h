@@ -18,7 +18,7 @@ public:
     std::string Serialize() override {
         std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << GetCenterGlobal().first << " " << GetCenterGlobal().second;
+		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second;
 
 		return ss.str();
     }
@@ -52,7 +52,10 @@ public:
 
     ~Shield() override = default;
 
+    /* 
+     * Is supposed to modify the ship 
+     */
     void Activate(Ship* ship) override {
-        ship->SetShieldDuration(80);
+        ship->SetShieldDuration(200);
     }
 };
