@@ -28,6 +28,9 @@ public:
     }
 
     ~Powerup() override = default;
+
+    virtual void Activate(Ship* ship) {}
+    
 protected:
     uint64_t creation_tick = 0;
 };
@@ -48,4 +51,8 @@ public:
 	}
 
     ~Shield() override = default;
+
+    void Activate(Ship* ship) override {
+        ship->SetShieldDuration(80);
+    }
 };

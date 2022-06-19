@@ -199,6 +199,14 @@ public:
 		hp -= damage;
 	}
 
+	void SetShieldDuration(int duration) {
+		protection = duration;
+	}
+
+	int GetShieldDuration() {
+		return protection;
+	}
+
 protected:
 	Rotation rotation;
 	double impulse = 1.01;

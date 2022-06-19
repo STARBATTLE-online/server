@@ -88,6 +88,16 @@ public:
 		return nullptr;
 	}
 
+	Ship* isNearPowerup(Powerup* powerup) {
+		for (auto& ship : ships)
+		{
+			if(ship->Distance(powerup) < 0) {
+				return ship;
+			}
+		}
+		return nullptr;
+	}
+
 	//���� ��� "�����������"
 	void ObserverSubscribes() {
 		//mouse_click_event->Subscribe();
@@ -203,6 +213,19 @@ public:
 			AsteroidCollisions(*it);
 			ShipCollisions(*it);
 		}
+
+		for(auto it = powerups.rbegin(); it != powerups.rend(); ++it)
+		{
+			auto r = isNearPowerup(*it);
+
+			if(r) {
+				auto ptr = *(--(it.base()));
+
+				ptr->Activate(r);
+
+				powerups.erase(--(it.base()));
+			}
+		}
 	}
 
 	std::string Serialize() {
@@ -217,7 +240,7 @@ public:
 
 		for (auto ship : ships)
 		{
-			ss << ship->Serialize() << " ";
+			ss << ship->Serialize() << " " ;//<< scores[ship->GetPrivateKey()] << " ";
 		}
 
 		for (auto bullet : bullets)
@@ -258,6 +281,8 @@ protected:
 	std::vector<Bullet*> bullets;
 	std::vector<Explosion*> explosions;
 	std::vector<Powerup*> powerups;
+
+	std::unordered_map<uint64_t, int> scores;
 
 	uint64_t tick_count = 0;
 };
