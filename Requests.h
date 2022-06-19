@@ -73,8 +73,8 @@ void RequestManager::mouseMoveRequest(std::stringstream& ss, std::stringstream& 
     for(auto& ship : ships) {
         if(ship->getPublicKey() == public_key) {
             if(ship->getPrivateKey() == private_key) {
-                ship->SendMouseMoveEvent(mouse_x, mouse_y);
-                ship->SetRotation(RotationFromString(rotation));
+                ship->sendMouseMoveEvent(mouse_x, mouse_y);
+                ship->setRotation(RotationFromString(rotation));
                 response << "OK";
                 return;
             } else {
@@ -150,7 +150,7 @@ void RequestManager::keyRequest(std::stringstream& ss, std::stringstream& respon
 
 void RequestManager::initRequest(std::stringstream& ss, std::stringstream& response) {
     
-    auto r = RequestManager::m_map_creator->AddShip(rand() % 1000, rand() % 1000, Rotation::Top);
+    auto r = RequestManager::m_map_creator->AddShip(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, Rotation::Top);
     auto coords = r->getCoordsGlobal();
     response << "INIT " << std::to_string(r->getPublicKey()) << " " << std::to_string(r->getPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
             << std::to_string((int)coords.second) << " " << std::to_string(r->getSpriteID()) << " " << std::to_string(MAP_WIDTH) << " " << std::to_string(MAP_HEIGHT);
