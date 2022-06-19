@@ -16,7 +16,7 @@
 
 #include "Requests.h"
 
-std::string make_string(boost::asio::streambuf& streambuf)
+std::string makeString(boost::asio::streambuf& streambuf)
 {
     return {buffers_begin(streambuf.data()), 
             buffers_end(streambuf.data())};
@@ -36,7 +36,7 @@ public:
 
     //This method starts handling the client by initiating the asynchronous reading operation
     //to read the request message from the client specifying the onRequestReceived() method as a callback.
-    void StartHandling()
+    void startHandling()
     {
 
         boost::asio::async_read_until(*m_sock,
@@ -69,7 +69,7 @@ private:
         }
 
         // Process the request.
-        m_response = ProcessTCPRequest(m_request);
+        m_response = processTCPRequest(m_request);
         // When the ProcessRequest() method completes and returns the string containing the response message,
         // the asynchronous writing operation is initiated to send this response message back to the client.
         boost::asio::async_write(*m_sock, boost::asio::buffer(m_response),
@@ -107,7 +107,7 @@ private:
     //To keep things simple,  we implement a dummy service which only emulates the execution of certain operations
     //The request processing emulation consists of performing many increment operations to emulate operations
     //that intensively consume CPU and then putting the thread of control to sleep for some time to emulate I/O operations
-    static std::string ProcessTCPRequest(boost::asio::streambuf &request)
+    static std::string processTCPRequest(boost::asio::streambuf &request)
     {
 
         // In this method we parse the request, process it
@@ -130,7 +130,7 @@ private:
         }
         response.push_back('\n');*/
         
-        response = RequestManager::ProcessRequest(make_string(request) + "\n");
+        response = RequestManager::processRequest(makeString(request) + "\n");
         return response;
     }
 
@@ -158,21 +158,21 @@ public:
     }
 
     //The Start() method is intended to instruct an object of the Acceptor class to start listening and accepting incoming connection requests.
-    void Start()
+    void start()
     {
         //It puts the m_acceptor acceptor socket into listening mode
         m_acceptor.listen();
-        InitAccept();
+        initAccept();
     }
 
     // Stop accepting incoming connection requests.
-    void Stop()
+    void stop()
     {
         m_isStopped.store(true);
     }
 
 private:
-    void InitAccept()
+    void initAccept()
     {
         //constructs an active socket object and initiates the asynchronous accept operation
         std::shared_ptr<boost::asio::ip::tcp::socket>
@@ -195,7 +195,7 @@ private:
         if (ec.value() == 0)
         {
             //an instance of the Service class is created and its StartHandling() method is called
-            (new Service(std::move(sock)))->StartHandling();
+            (new Service(std::move(sock)))->startHandling();
         }
         else
         {
@@ -209,7 +209,7 @@ private:
         // acceptor has not been stopped yet.
         if (!m_isStopped.load())
         {
-            InitAccept();
+            initAccept();
         }
         else
         {
@@ -239,7 +239,7 @@ public:
     // Accepts a protocol port number on which the server should listen for the incoming connection requests
     // and the number of threads to add to the pool as input arguments and starts the server
     // Nonblocking Method
-    void Start(unsigned short port_num,
+    void start(unsigned short port_num,
                unsigned int thread_pool_size)
     {
 
@@ -247,7 +247,7 @@ public:
 
         // Create and start Acceptor.
         acc = std::make_unique<Acceptor>(m_ios, port_num);
-        acc->Start();
+        acc->start();
 
         // Create specified number of threads and
         // add them to the pool.
@@ -263,9 +263,9 @@ public:
 
     // Stop the server.
     // Blocks the caller thread until the server is stopped and all the threads running the event loop exit.
-    void Stop()
+    void stop()
     {
-        acc->Stop();
+        acc->stop();
         m_ios.stop();
 
         for (auto &th : m_thread_pool)

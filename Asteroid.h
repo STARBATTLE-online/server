@@ -14,11 +14,11 @@ public:
 
 	~Asteroid() override = default;
 
-	std::string Serialize() override
+	std::string serialize() override
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second;
+		ss << getType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second;
 
 		return ss.str();
 	}
@@ -32,16 +32,16 @@ public:
 		width = 60;
 		height = 50;
 		mass = 6;
-		SetCoordsByCenter(x, y);
-		SetSpeed(speed_x, speed_y);
+		setCoordsByCenter(x, y);
+		setSpeed(speed_x, speed_y);
 	};
 
-	std::string GetType() override
+	std::string getType() override
 	{
 		return "SmallAsteroid";
 	}
 
-	uint64_t GetDestructionScore() override {
+	uint64_t getDestructionScore() override {
 		return 5.;
 	}
 };
@@ -54,16 +54,16 @@ public:
 		width = 100;
 		height = 88;
 		mass = 10;
-		SetCoordsByCenter(x, y);
-		SetSpeed(speed_x, speed_y);
+		setCoordsByCenter(x, y);
+		setSpeed(speed_x, speed_y);
 	};
 
-	std::string GetType() override
+	std::string getType() override
 	{
 		return "BigAsteroid";
 	}
 
-	uint64_t GetDestructionScore() override {
+	uint64_t getDestructionScore() override {
 		return 2.;
 	}
 };
