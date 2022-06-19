@@ -144,11 +144,24 @@ public:
 			return explosion->GetCreationTick() + 100 < tick_count;
 		});
 
+		std::erase_if(powerups, [this](Powerup* powerup) {
+			return powerup->GetCreationTick() + 250 < tick_count;
+		});
+
+		TryGeneratelAsteroid();
+
 		++tick_count;
 	}
 
+	void TryGeneratelAsteroid() {	
+		if(asteroids.size() >= NUM_ASTEROIDS_BIG + NUM_ASTEROIDS_SMALL) return;
+
+		asteroids.push_back(new BigAsteroid(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, (double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
+	}
+
+
 	void CheckCollisionsAll() {
-for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
+		for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
 		{
 			auto r = BulletCollisions(*it);
 	

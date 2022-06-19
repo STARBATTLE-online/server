@@ -53,7 +53,7 @@ public:
 		private_key = rand();
 		public_key = rand();
 
-		sprite_id = 3; // chosen by fair dice roll. guarenteed to be random
+		sprite_id = rand() % 4 + 1;
 
 		mass = 10;
 	};

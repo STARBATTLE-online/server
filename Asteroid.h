@@ -40,6 +40,10 @@ public:
 	{
 		return "SmallAsteroid";
 	}
+
+	uint64_t GetDestructionScore() override {
+		return 5.;
+	}
 };
 
 class BigAsteroid : public Asteroid
@@ -54,15 +58,12 @@ public:
 		SetSpeed(speed_x, speed_y);
 	};
 
-	std::pair<SmallAsteroid, SmallAsteroid> Split()
-	{
-		SmallAsteroid asteroid1(static_cast<int>(global_x) + 12, static_cast<int>(global_y) - 10, 0, -1.5);
-		SmallAsteroid asteroid2(static_cast<int>(global_x) + 12, static_cast<int>(global_y) + 35, 0, 1.5);
-		return std::make_pair(asteroid1, asteroid2);
-	}
-
 	std::string GetType() override
 	{
 		return "BigAsteroid";
+	}
+
+	uint64_t GetDestructionScore() override {
+		return 2.;
 	}
 };

@@ -1,3 +1,5 @@
+#pragma once
+
 class Explosion : public MovableSprite {
 protected:
     Explosion() = default;
