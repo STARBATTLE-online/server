@@ -21,32 +21,22 @@
 class MyFramework {
 
 public:
-
-	virtual void PreInit(int& width, int& height, bool& fullscreen)
-	{
-		//Тут было про окно, теперь не надо. Можно тут пускать буст или ещё что-то, подумай.
-	}
-
-	virtual bool Init() {
+	virtual bool init() {
 
 		map_manager = std::make_shared<MapCreator>();
 
-		RequestManager::SetMapCreator(map_manager);
+		RequestManager::setMapCreator(map_manager);
 
 		return true;
 	}
 
-	virtual void Close() {
-
-	}
-
-	virtual bool Tick() {
+	virtual bool tick() {
 		std::lock_guard<std::mutex> lock(map_manager->mt);
 
 		map_manager->CheckCollisionsAll();
-		map_manager->Tick();
+		map_manager->tick();
 
-		//std::cout << map_manager->Serialize() << "\n";
+		//std::cout << map_manager->serialize() << "\n";
 
         return false;
 	}
@@ -70,13 +60,13 @@ int main()
 	
 	unsigned short port_num = 3333;
     MyFramework framework;
-    framework.Init();
+    framework.init();
 
 	std::thread t1([&framework]() {
 		auto previous = std::chrono::high_resolution_clock::now();
 		while (true)
 		{
-			if(framework.Tick()) break;
+			if(framework.tick()) break;
 			auto current = std::chrono::high_resolution_clock::now();
 			auto delta = current - previous;
 			std::this_thread::sleep_for(std::chrono::milliseconds(16));
@@ -102,13 +92,13 @@ int main()
 			if (thread_pool_size == 0)
 				thread_pool_size = DEFAULT_THREAD_POOL_SIZE;
 
-			srv.Start(port_num, thread_pool_size);
+			srv.start(port_num, thread_pool_size);
 
 			while(true) {
 				std::this_thread::sleep_for(std::chrono::seconds(10000000));
 			}
 
-			srv.Stop();
+			srv.stop();
 		}
 		catch (boost::system::system_error& e)
 		{
@@ -120,8 +110,6 @@ int main()
 
 	t1.join();
 	t2.join();
-
-    framework.Close();
 
 	std::cout << "Server shut down.\n";
 

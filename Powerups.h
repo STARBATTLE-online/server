@@ -10,26 +10,26 @@ public:
         this->creation_tick = creation_tick;
     }
 
-    std::string GetType() override
+    std::string getType() override
 	{
 		return "Powerup";
 	}
 
-    std::string Serialize() override {
+    std::string serialize() override {
         std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second;
+		ss << getType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second;
 
 		return ss.str();
     }
 
-    uint64_t GetCreationTick() {
+    uint64_t getCreationTick() {
         return creation_tick;
     }
 
     ~Powerup() override = default;
 
-    virtual void Activate(Ship* ship) {}
+    virtual void activate(Ship* ship) {}
     
 protected:
     uint64_t creation_tick = 0;
@@ -41,11 +41,11 @@ public:
         width = 126;
         height = 126;
 
-        SetCoordsByCenter(x, y);
+        setCoordsByCenter(x, y);
         this->creation_tick = creation_tick;
     }
 
-    std::string GetType() override
+    std::string getType() override
 	{
 		return "Shield";
 	}
@@ -55,7 +55,7 @@ public:
     /* 
      * Is supposed to modify the ship 
      */
-    void Activate(Ship* ship) override {
+    void activate(Ship* ship) override {
         ship->SetShieldDuration(200);
     }
 };

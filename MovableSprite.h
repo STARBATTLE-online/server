@@ -14,30 +14,30 @@ public:
 
 	~MovableSprite() override = default;
 
-	virtual void SetSpeed(double new_x_speed, double new_y_speed)
+	virtual void setSpeed(double new_x_speed, double new_y_speed)
 	{
 		x_speed = new_x_speed;
 		y_speed = new_y_speed;
 	}
 
-	virtual void Move()
+	virtual void move()
 	{
 		global_y += y_speed;
 		global_x += x_speed;
-		Border();
+		border();
 	}
 
-	virtual std::pair<double, double> GetSpeed()
+	virtual std::pair<double, double> getSpeed()
 	{
 		return std::make_pair(y_speed, x_speed);
 	}
 
-	virtual double GetMass()
+	virtual double getMass()
 	{
 		return mass;
 	}
 
-	virtual void Border()
+	virtual void border()
 	{
 
 		if (global_x + width / 2 >= MAP_WIDTH)
@@ -59,45 +59,45 @@ public:
 		}
 	}
 
-	std::string GetType() override
+	std::string getType() override
 	{
 		return "MovableSprite";
 	}
 
-	void TruncateSpeed(double limit)
+	void gruncateSpeed(double limit)
 	{
-		double speed = sqrt(pow(GetSpeed().first, 2) + pow(GetSpeed().second, 2));
+		double speed = sqrt(pow(getSpeed().first, 2) + pow(getSpeed().second, 2));
 
 		if (speed < limit)
 			return;
 
-		double newX = GetSpeed().first / speed;
-		double newY = GetSpeed().second / speed;
+		double newX = getSpeed().first / speed;
+		double newY = getSpeed().second / speed;
 
-		SetSpeed(newX * limit, newY * limit);
+		setSpeed(newX * limit, newY * limit);
 	}
 
-	void MinimalSpeedLimit(double limit)
+	void minimalSpeedLimit(double limit)
 	{
-		double speed = sqrt(pow(GetSpeed().first, 2) + pow(GetSpeed().second, 2));
+		double speed = sqrt(pow(getSpeed().first, 2) + pow(getSpeed().second, 2));
 		
 		if (speed > limit)
 			return;
 
-		double newX = GetSpeed().first / speed;
-		double newY = GetSpeed().second / speed;
+		double newX = getSpeed().first / speed;
+		double newY = getSpeed().second / speed;
 
-		SetSpeed(newX * limit, newY * limit);
+		setSpeed(newX * limit, newY * limit);
 	}
 
-	virtual bool CheckCollision(MovableSprite *element)
+	virtual bool collisionDetector(MovableSprite *element)
 	{
 		if(element == this) return false;
 		auto original = element->getCenterGlobal();
-		element->SetCoordsByCenter(element->getCenterGlobal().first - MAP_WIDTH, element->getCenterGlobal().second - MAP_HEIGHT);
+		element->setCoordsByCenter(element->getCenterGlobal().first - MAP_WIDTH, element->getCenterGlobal().second - MAP_HEIGHT);
 		for(int i = -1; i <= 1; ++i) {
 			for(int j = -1; j <= 1; ++j) {
-				auto r = Distance(element);
+				auto r = distance(element);
 				if(std::abs(r) <= 1e-2) return true;
 				if (r < 0)
 				{
@@ -105,21 +105,21 @@ public:
 					{
 						std::pair<double, double> result = Collide(element);
 
-						element->SetCoordsByCenter(original.first, original.second);
+						element->setCoordsByCenter(original.first, original.second);
 						return true;
 					}
 					else
 					{
-						element->SetCoordsByCenter(original.first, original.second);
+						element->setCoordsByCenter(original.first, original.second);
 						return true;
 					}
 				}
 
-				element->SetCoordsByCenter(element->getCenterGlobal().first, element->getCenterGlobal().second + MAP_HEIGHT);
+				element->setCoordsByCenter(element->getCenterGlobal().first, element->getCenterGlobal().second + MAP_HEIGHT);
 			}
-			element->SetCoordsByCenter(element->getCenterGlobal().first + MAP_WIDTH, element->getCenterGlobal().second - 2 * MAP_HEIGHT);
+			element->setCoordsByCenter(element->getCenterGlobal().first + MAP_WIDTH, element->getCenterGlobal().second - 2 * MAP_HEIGHT);
 		}
-		element->SetCoordsByCenter(original.first, original.second);
+		element->setCoordsByCenter(original.first, original.second);
 		return false;
 	}
 
@@ -129,13 +129,13 @@ public:
 
 		double distance = sqrt(distanceSquared);
 
-		double overlap = (distance - (GetRadius() + element->GetRadius())) / 2.;
+		double overlap = (distance - (getRadius() + element->getRadius())) / 2.;
 
 		double moveX = (overlap * (getCenterGlobal().first - element->getCenterGlobal().first)) / distance * 2;
 		double moveY = (overlap * (getCenterGlobal().second - element->getCenterGlobal().second)) / distance * 2;
 
-		SetCoordsByCenter(getCenterGlobal().first - moveX, getCenterGlobal().second - moveY);
-		element->SetCoordsByCenter(element->getCenterGlobal().first + moveX, element->getCenterGlobal().second + moveY);
+		setCoordsByCenter(getCenterGlobal().first - moveX, getCenterGlobal().second - moveY);
+		element->setCoordsByCenter(element->getCenterGlobal().first + moveX, element->getCenterGlobal().second + moveY);
 
 		// Find normal vector
 		double normalX = -(getCenterGlobal().first - element->getCenterGlobal().first) / distance;
@@ -145,32 +145,32 @@ public:
 		double tangentX = -normalY;
 		double tangentY = normalX;
 
-		double dotProductTangent1 = tangentX * GetSpeed().first + tangentY * GetSpeed().second;
-		double dotProductTangent2 = tangentX * element->GetSpeed().first + tangentY * element->GetSpeed().second;
+		double dotProductTangent1 = tangentX * getSpeed().first + tangentY * getSpeed().second;
+		double dotProductTangent2 = tangentX * element->getSpeed().first + tangentY * element->getSpeed().second;
 
-		double dotProductNormal1 = normalX * GetSpeed().first + normalY * GetSpeed().second;
-		double dotProductNormal2 = normalX * element->GetSpeed().first + normalY * element->GetSpeed().second;
+		double dotProductNormal1 = normalX * getSpeed().first + normalY * getSpeed().second;
+		double dotProductNormal2 = normalX * element->getSpeed().first + normalY * element->getSpeed().second;
 
-		double m1 = (dotProductNormal1 * (GetMass() - element->GetMass()) + 2 * element->GetMass() * dotProductNormal2) / (GetMass() + element->GetMass());
-		double m2 = (dotProductNormal2 * (element->GetMass() - GetMass()) + 2 * GetMass() * dotProductNormal1) / (GetMass() + element->GetMass());
+		double m1 = (dotProductNormal1 * (getMass() - element->getMass()) + 2 * element->getMass() * dotProductNormal2) / (getMass() + element->getMass());
+		double m2 = (dotProductNormal2 * (element->getMass() - getMass()) + 2 * getMass() * dotProductNormal1) / (getMass() + element->getMass());
 
-		SetSpeed(tangentX * dotProductTangent1 + normalX * m1, tangentY * dotProductTangent1 + normalY * m1);
-		element->SetSpeed(tangentX * dotProductTangent2 + normalX * m2, tangentY * dotProductTangent2 + normalY * m2);
+		setSpeed(tangentX * dotProductTangent1 + normalX * m1, tangentY * dotProductTangent1 + normalY * m1);
+		element->setSpeed(tangentX * dotProductTangent2 + normalX * m2, tangentY * dotProductTangent2 + normalY * m2);
 
-		TruncateSpeed(GetSpeedCeiling());
-		element->TruncateSpeed(element->GetSpeedCeiling());
+		gruncateSpeed(getSpeedCeiling());
+		element->gruncateSpeed(element->getSpeedCeiling());
 
-		MinimalSpeedLimit(1);
-		element->MinimalSpeedLimit(1);
+		minimalSpeedLimit(1);
+		element->minimalSpeedLimit(1);
 
 		return {0, 0};
 	}
 
-	virtual double GetSpeedCeiling() {
+	virtual double getSpeedCeiling() {
 		return 3.;
 	}
 
-	virtual uint64_t GetDestructionScore() {
+	virtual uint64_t getDestructionScore() {
 		return 1;
 	}
 protected:

@@ -10,20 +10,20 @@ public:
         this->creation_tick = creation_tick;
     }
 
-    std::string GetType() override
+    std::string getType() override
 	{
 		return "Explosion";
 	}
 
-    std::string Serialize() override {
+    std::string serialize() override {
         std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << creation_tick;
+		ss << getType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << creation_tick;
 
 		return ss.str();
     }
 
-    uint64_t GetCreationTick() {
+    uint64_t getCreationTick() {
         return creation_tick;
     }
 
@@ -38,11 +38,11 @@ public:
         width = 384;
         height = 384;
 
-        SetCoordsByCenter(x, y);
+        setCoordsByCenter(x, y);
         this->creation_tick = creation_tick;
     }
 
-    std::string GetType() override
+    std::string getType() override
 	{
 		return "BigExplosion";
 	}
@@ -56,11 +56,11 @@ public:
         width = 200;
         height = 200;
 
-        SetCoordsByCenter(x, y);
+        setCoordsByCenter(x, y);
         this->creation_tick = creation_tick;
     }
 
-    std::string GetType() override
+    std::string getType() override
 	{
 		return "SmallExplosion";
 	}

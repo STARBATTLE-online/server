@@ -30,7 +30,7 @@ public:
 		{
 			while (AsteroidCollisions(astroid))
 			{
-				astroid->SetCoords(rand() % MAP_WIDTH, rand() % MAP_HEIGHT);
+				astroid->setCoords(rand() % MAP_WIDTH, rand() % MAP_HEIGHT);
 			}
 		}
 
@@ -53,7 +53,7 @@ public:
 		// Create bullet
 		bullets.push_back(new Bullet(ship->getCenterGlobal().first, ship->getCenterGlobal().second, x_speed, y_speed));
 		// Set bullet speed
-		bullets.back()->SetSpeed(x_speed, y_speed);
+		bullets.back()->setSpeed(x_speed, y_speed);
 		bullets.back()->sender_id = ship->getPublicKey();
 		ship->SetReloadTime(RELOAD_TIME);
 	}
@@ -61,7 +61,7 @@ public:
 	Asteroid* AsteroidCollisions(MovableSprite* object) {
 		for (auto& asteroid : asteroids)
 		{
-			if(asteroid->CheckCollision(object)) {
+			if(asteroid->collisionDetector(object)) {
 				return asteroid;
 			}
 		}
@@ -72,7 +72,7 @@ public:
 		for (auto& bullet : bullets)
 		{
 			if(bullet->sender_id == exemptKey) continue;
-			if(bullet->CheckCollision(object)) {
+			if(bullet->collisionDetector(object)) {
 				return bullet;
 			}
 		}
@@ -82,7 +82,7 @@ public:
 	Ship* ShipCollisions(MovableSprite* object) {
 		for (auto& ship : ships)
 		{
-			if(ship->CheckCollision(object)) {
+			if(ship->collisionDetector(object)) {
 				return ship;
 			}
 		}
@@ -92,7 +92,7 @@ public:
 	Ship* isNearPowerup(Powerup* powerup) {
 		for (auto& ship : ships)
 		{
-			if(ship->Distance(powerup) < 0) {
+			if(ship->distance(powerup) < 0) {
 				return ship;
 			}
 		}
@@ -105,7 +105,7 @@ public:
 	Ship* AddShip(int x, int y, Rotation rot) {
 		ships.push_back(new Ship(192, 192));
 		ships.back()->SetRotation(rot);
-		ships.back()->SetCoords(x, y);
+		ships.back()->setCoords(x, y);
 
 		return ships.back();
 	}
@@ -120,19 +120,19 @@ public:
 	/*
 	 * Advances the game state by 1 frame.
 	 */
-	void Tick() {
+	void tick() {
 		for (auto astroid : asteroids)
 		{
-			astroid->Move();
+			astroid->move();
 		}
 		for (auto ship : ships)
 		{
-			ship->Move();
-			ship->Tick();
+			ship->move();
+			ship->tick();
 		}
 		for (auto bullet : bullets)
 		{
-			bullet->Move();
+			bullet->move();
 			--bullet->lifespan;
 		}
 
@@ -143,11 +143,11 @@ public:
 
 		// Remove explosions that have already finished
 		std::erase_if(explosions, [this](Explosion* explosion) {
-			return explosion->GetCreationTick() + 100 < tick_count;
+			return explosion->getCreationTick() + 100 < tick_count;
 		});
 
 		std::erase_if(powerups, [this](Powerup* powerup) {
-			return powerup->GetCreationTick() + 250 < tick_count;
+			return powerup->getCreationTick() + 250 < tick_count;
 		});
 
 		TryGeneratelAsteroid();
@@ -172,10 +172,10 @@ public:
 	
 			if(r) {
 				auto ptr = *(--(it.base()));
-				scores[r->sender_id] += (*it)->GetDestructionScore();
+				scores[r->sender_id] += (*it)->getDestructionScore();
 
 				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
-				if(ptr->GetType() == "BigAsteroid") {
+				if(ptr->getType() == "BigAsteroid") {
 					asteroids.push_back(new SmallAsteroid(ptr->getCenterGlobal().first - 5 + (rand() % 5), ptr->getCenterGlobal().second - 5 + (rand() % 5), 
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 
@@ -183,7 +183,7 @@ public:
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 				}
 
-				if(ptr->GetType() == "SmallAsteroid" && (rand() % 100 > 30)) {
+				if(ptr->getType() == "SmallAsteroid" && (rand() % 100 > 30)) {
 					powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 				}
 
@@ -199,7 +199,7 @@ public:
 
 			if(r) {
 				auto ptr = *(--(it.base()));
-				scores[r->sender_id] += (*it)->GetDestructionScore();
+				scores[r->sender_id] += (*it)->getDestructionScore();
 				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
 
 				(*it)->TakeDamage(2);
@@ -220,7 +220,7 @@ public:
 			if(r) {
 				auto ptr = *(--(it.base()));
 
-				ptr->Activate(r);
+				ptr->activate(r);
 
 				powerups.erase(--(it.base()));
 			}
@@ -231,34 +231,34 @@ public:
 	 * Serializes the game state into a single string that can
 	 * be accepted by the game client.
 	 */
-	std::string Serialize() {
+	std::string serialize() {
 		std::stringstream ss;
 		
 		ss << tick_count << " ";
 
 		for (auto astroid : asteroids)
 		{
-			ss << astroid->Serialize() << " ";
+			ss << astroid->serialize() << " ";
 		}
 
 		for (auto ship : ships)
 		{
-			ss << ship->Serialize() << " " << scores[ship->getPrivateKey()] << " ";
+			ss << ship->serialize() << " " << scores[ship->getPrivateKey()] << " ";
 		}
 
 		for (auto bullet : bullets)
 		{
-			ss << bullet->Serialize() << " ";
+			ss << bullet->serialize() << " ";
 		}
 
 		for (auto explosion : explosions)
 		{
-			ss << explosion->Serialize() << " ";
+			ss << explosion->serialize() << " ";
 		}
 
 		for (auto powerup : powerups)
 		{
-			ss << powerup->Serialize() << " ";
+			ss << powerup->serialize() << " ";
 		}
 
 		return ss.str();
@@ -270,7 +270,7 @@ public:
 	 * Getters
 	 */
 
-	auto GetShips() {
+	auto getShips() {
 		return ships;
 	}
 

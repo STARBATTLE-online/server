@@ -26,7 +26,7 @@ public:
 		this->y_speed = y_speed;
 	};
 
-	std::string Serialize() override
+	std::string serialize() override
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
@@ -59,23 +59,15 @@ public:
 	};
 	~Ship() override = default;
 
-	void Move() override
+	void move() override
 	{
 		global_y += y_speed;
 		global_x += x_speed;
-		Border();
-		UseImpulse();
-
-		// THIS SEGFEAULTS DONT UNCOMMENT THIS LINE
-		/*
-			if (dynamic_cast<Shield*>(power))
-			{
-				power->SetCoordsByCenter(GetCenterGlobal().first, GetCenterGlobal().second);
-			}
-		*/
+		border();
+		useImpulse();
 	}
 
-	void Tick() {
+	void tick() {
 		if (reload_time)
 			--reload_time;
 
@@ -83,7 +75,7 @@ public:
 			--protection;
 	}
 
-	void UseImpulse()
+	void useImpulse()
 	{
 		x_speed /= impulse;
 		y_speed /= impulse;
@@ -97,7 +89,7 @@ public:
 		}
 	}
 
-	void MoveManual(FRKey k)
+	void setMovementDirection(FRKey k)
 	{
 		switch (k)
 		{
@@ -118,19 +110,13 @@ public:
 		}
 	}
 
-	void SetEnginePowerSpeed(double new_speed)
-	{
-		engine_power_speed = new_speed;
-	}
-
-	//??? ?? "???????????". ???? ?? ???? - ??????
 	void SendMouseMoveEvent(int x, int y)
 	{
 		mouse_x = x;
 		mouse_y = y;
 	};
 
-	uint64_t GetDestructionScore() override {
+	uint64_t getDestructionScore() override {
 		return 100;
 	}
 
@@ -154,11 +140,11 @@ public:
 		return rotation;
 	}
 
-	std::string Serialize() override
+	std::string serialize() override
 	{
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << GetType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
+		ss << getType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
 
 		return ss.str();
 	}
@@ -168,7 +154,7 @@ public:
 		rotation = rot;
 	}
 
-	std::string GetType() override
+	std::string getType() override
 	{
 		return "Ship";
 	}
@@ -188,7 +174,7 @@ public:
 		return reload_time;
 	}
 
-	double GetSpeedCeiling() override {
+	double getSpeedCeiling() override {
 		return 50.;
 	}
 
