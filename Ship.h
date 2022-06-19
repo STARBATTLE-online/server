@@ -1,6 +1,5 @@
 #pragma once
 #include "MovableSprite.h"
-#include "SuperPower.h"
 #include "MapCreator.h"
 #include "Rotation.h"
 
@@ -82,18 +81,6 @@ public:
 
 		if (protection)
 			--protection;
-	}
-
-	void PowersHandler()
-	{
-		if (dynamic_cast<Shield *>(power))
-		{
-			power->SetCoords(GetCoordsGlobal().first - power->GetSize().first / 2, GetCoordsGlobal().second - power->GetSize().second / 2);
-		}
-		else if (dynamic_cast<Rocket *>(power))
-		{
-			//
-		}
 	}
 
 	void UseImpulse()
@@ -213,7 +200,6 @@ public:
 	}
 
 protected:
-	HeadSprite *power; //?
 	Rotation rotation;
 	double impulse = 1.01;
 	double control_impulse = 0.01;

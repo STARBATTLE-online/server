@@ -3,6 +3,7 @@
 #include "Ship.h"
 #include "Rotation.h"
 #include "Explosion.h"
+#include "Powerups.h"
 
 #include <ranges>
 
@@ -147,23 +148,47 @@ public:
 	}
 
 	void CheckCollisionsAll() {
-		for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
+for (auto it = asteroids.rbegin(); it != asteroids.rend(); ++it)
 		{
 			auto r = BulletCollisions(*it);
 	
 			if(r) {
+				auto ptr = *(--(it.base()));
+
 				explosions.push_back(new BigExplosion(r->GetCenterGlobal().first, r->GetCenterGlobal().second, tick_count));
+				if(ptr->GetType() == "BigAsteroid") {
+					asteroids.push_back(new SmallAsteroid(ptr->GetCenterGlobal().first - 5 + (rand() % 5), ptr->GetCenterGlobal().second - 5 + (rand() % 5), 
+						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
+
+					asteroids.push_back(new SmallAsteroid(ptr->GetCenterGlobal().first - 5 + (rand() % 5), ptr->GetCenterGlobal().second - 5 + (rand() % 5), 
+						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
+				}
+
+				if(ptr->GetType() == "SmallAsteroid" && (rand() % 100 > 30)) {
+					powerups.push_back(new Shield(ptr->GetCenterGlobal().first, ptr->GetCenterGlobal().second, tick_count));
+				}
+
 				asteroids.erase(--(it.base()));
 				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
 			}
 
 			AsteroidCollisions(*it);
 		}
-		for (auto ship : ships)
+		for (auto it = ships.rbegin(); it != ships.rend(); ++it)
 		{
-			BulletCollisions(ship, ship->GetPublicKey());
-			AsteroidCollisions(ship);
-			ShipCollisions(ship);
+			auto r = BulletCollisions(*it, (*it)->GetPublicKey());
+
+			if(r) {
+				auto ptr = *(--(it.base()));
+
+				explosions.push_back(new BigExplosion(r->GetCenterGlobal().first, r->GetCenterGlobal().second, tick_count));
+
+				ships.erase(--(it.base()));
+				bullets.erase(std::remove(bullets.begin(), bullets.end(), r), bullets.end());
+			}
+			
+			AsteroidCollisions(*it);
+			ShipCollisions(*it);
 		}
 	}
 
@@ -192,6 +217,11 @@ public:
 			ss << explosion->Serialize() << " ";
 		}
 
+		for (auto powerup : powerups)
+		{
+			ss << powerup->Serialize() << " ";
+		}
+
 		return ss.str();
 	}
 	
@@ -214,6 +244,7 @@ protected:
 	std::vector<Ship*> ships;
 	std::vector<Bullet*> bullets;
 	std::vector<Explosion*> explosions;
+	std::vector<Powerup*> powerups;
 
 	uint64_t tick_count = 0;
 };
