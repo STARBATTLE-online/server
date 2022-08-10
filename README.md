@@ -1,6 +1,6 @@
 # server
 
-Start server:```g++ -std=c++20 ./main.cpp -O3 && ./a.out```
+Start server:  ```g++ -std=c++20 ./main.cpp -O3 && ./a.out```
 
 ```diff
 TODO:  
