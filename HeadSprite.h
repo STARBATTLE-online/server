@@ -7,8 +7,8 @@
 
 #include "GlobalVariables.h"
 
-/*
- * Base class for all objects on the map
+/**
+ * @brief HeadSprite is used as a base for all objects that might be rendered.
  */
 class HeadSprite {
 public:	
@@ -26,11 +26,11 @@ public:
 		global_y = new_y - height / 2;
 	}
 
-	virtual std::pair<double, double> getCoordsGlobal() {
+	std::pair<double, double> getCoordsGlobal() const {
 		return std::make_pair(global_x, global_y);
 	}
 
-	virtual std::pair<double, double> getSize() {
+	std::pair<double, double> getSize() const  {
 		return std::make_pair(width, height);
 	}
 
@@ -38,7 +38,7 @@ public:
 		return (height + width) / 4.0;
 	}
 
-	virtual std::pair<double, double> getCenterGlobal() {
+	std::pair<double, double> getCenterGlobal() const {
 		return std::make_pair(global_x + width / 2, global_y + height / 2);
 	}
 

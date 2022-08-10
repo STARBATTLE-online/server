@@ -1,6 +1,9 @@
 #pragma once
 #include "HeadSprite.h"
 
+/**
+ * @brief MovableSprite is used for all the objects that might move or need to resolve collisions.
+ */
 class MovableSprite : public HeadSprite
 {
 public:
@@ -64,7 +67,7 @@ public:
 		return "MovableSprite";
 	}
 
-	void gruncateSpeed(double limit)
+	void truncateSpeed(double limit)
 	{
 		double speed = sqrt(pow(getSpeed().first, 2) + pow(getSpeed().second, 2));
 
@@ -103,7 +106,7 @@ public:
 				{
 					if (dynamic_cast<MovableSprite *>(element))
 					{
-						std::pair<double, double> result = Collide(element);
+						std::pair<double, double> result = collide(element);
 
 						element->setCoordsByCenter(original.first, original.second);
 						return true;
@@ -123,7 +126,7 @@ public:
 		return false;
 	}
 
-	virtual std::pair<double, double> Collide(MovableSprite *element)
+	virtual std::pair<double, double> collide(MovableSprite *element)
 	{
 		double distanceSquared = pow(getCenterGlobal().first - element->getCenterGlobal().first, 2) + pow(getCenterGlobal().second - element->getCenterGlobal().second, 2);
 
@@ -157,8 +160,8 @@ public:
 		setSpeed(tangentX * dotProductTangent1 + normalX * m1, tangentY * dotProductTangent1 + normalY * m1);
 		element->setSpeed(tangentX * dotProductTangent2 + normalX * m2, tangentY * dotProductTangent2 + normalY * m2);
 
-		gruncateSpeed(getSpeedCeiling());
-		element->gruncateSpeed(element->getSpeedCeiling());
+		truncateSpeed(getSpeedCeiling());
+		element->truncateSpeed(element->getSpeedCeiling());
 
 		minimalSpeedLimit(1);
 		element->minimalSpeedLimit(1);

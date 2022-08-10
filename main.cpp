@@ -1,4 +1,4 @@
-﻿#define CURL_STATICLIB
+#define CURL_STATICLIB
 
 #include <iostream>
 #include <random>
@@ -18,6 +18,11 @@
 #include "server.h"
 #include "Requests.h"
 
+const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
+
+/**
+ * @brief This class manages the main game loop
+ */
 class MyFramework {
 
 public:
@@ -42,8 +47,6 @@ private:
 	std::shared_ptr<World> map_manager;
 };
 
-const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
-
 int main() {
 	std::cout << "Server started...\n";
 
@@ -54,18 +57,19 @@ int main() {
     framework.init();
 
 	std::thread t1([&framework]() {
-		auto previous = std::chrono::high_resolution_clock::now();
 		while (true) {
+			auto previous = std::chrono::high_resolution_clock::now();
 			if(framework.tick()) break;
-			std::this_thread::sleep_for(std::chrono::milliseconds(16));
+			auto current = std::chrono::high_resolution_clock::now();
+			std::this_thread::sleep_for(std::chrono::milliseconds(16) - (current - previous));
 		}
-		});
+	});
 
 	std::thread t2([&port_num]() {
 		try {
 			//it instantiates an object of the Server class named srv.
 			Server srv;
-			unsigned int thread_pool_size = 1; // While we technically can use more than 1 thread, it won't give us any more performance.
+			unsigned int thread_pool_size = DEFAULT_THREAD_POOL_SIZE; // While we technically can use more than 1 thread, it won't give us any more performance.
 
 			srv.start(port_num, thread_pool_size);
 

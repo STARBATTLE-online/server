@@ -3,7 +3,9 @@
 #include "World.h"
 #include "Rotation.h"
 
-//????? ????? ??? ?????, ???? ?? ???????? ???????
+/**
+ * @brief Bullet class that stores all the neccessary logic about bullet, its position, sender, etc.
+ */
 class Bullet : public MovableSprite {
 public:
 	Bullet(int x, int y) {
@@ -37,6 +39,9 @@ public:
 	uint64_t sender_id = 0;
 };
 
+/**
+ * @brief Ship class that stores all the neccessary logic about ship, its state.
+ */
 class Ship : public MovableSprite {
 public:
 	Ship() = default;
@@ -47,7 +52,7 @@ public:
 		private_key = rand();
 		public_key = rand();
 
-		sprite_id = rand() % 4 + 1;
+		sprite_id = rand() % 6 + 1;
 
 		mass = 10;
 	};
@@ -65,7 +70,7 @@ public:
 		if(protection > 0) {
 			return 140;
 		} else {
-			return (height + width) / 4.0;
+			return (height + width) / 4.0 - 20;
 		}
 	}
 
@@ -189,6 +194,10 @@ public:
 
 	int getHealth() {
 		return hp;
+	}
+
+	void setHealth(int new_health) {
+		hp = new_health;
 	}
 
 	void setShieldDuration(int duration) {

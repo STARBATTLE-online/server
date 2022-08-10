@@ -3,18 +3,21 @@
 #include <memory>
 #include "World.h"
 
-// Singleton
+/**
+ * @brief RequestManager is used to create responses; singleton
+ */
 class RequestManager {
     static std::shared_ptr<World> m_map_creator;
 public:
     static void setWorld(std::shared_ptr<World> map_creator);
 
-    static std::string processRequest(std::string request);
+    static std::string processRequest(const std::string& request);
     static void initRequest(std::stringstream& ss, std::stringstream& response);
     static void mouseButtonRequest(std::stringstream& ss, std::stringstream& response);
     static void mouseMoveRequest(std::stringstream& ss, std::stringstream& response);
     static void keyRequest(std::stringstream& ss, std::stringstream& response);
     static void tickRequest(std::stringstream& ss, std::stringstream& response);
+    static void closeRequest(std::stringstream& ss, std::stringstream& response);
 };
 
 std::shared_ptr<World> RequestManager::m_map_creator;
@@ -23,7 +26,7 @@ void RequestManager::setWorld(std::shared_ptr<World> map_creator) {
     RequestManager::m_map_creator = map_creator;
 }
 
-std::string RequestManager::processRequest(std::string request)  {
+std::string RequestManager::processRequest(const std::string& request)  {
     std::lock_guard<std::mutex> lock(RequestManager::m_map_creator->mt);
     std::stringstream response;
     std::stringstream ss(request);
@@ -40,12 +43,14 @@ std::string RequestManager::processRequest(std::string request)  {
             mouseMoveRequest(ss, response);
         } else if(commandType == "TICK") {
             tickRequest(ss, response);
+        } else if(commandType == "CLOSE") {
+            closeRequest(ss, response);
         } else {
             break;
         }
         response << " ";
     }
-    
+
     return response.str();
 }
 
@@ -73,6 +78,22 @@ void RequestManager::mouseMoveRequest(std::stringstream& ss, std::stringstream& 
     }
 
     response << "INVALID_PUBLIC_KEY";
+}
+
+void RequestManager::closeRequest(std::stringstream& ss, std::stringstream& response) {
+    uint64_t public_key, private_key;
+    ss >> public_key >> private_key;
+    for(auto it = RequestManager::m_map_creator->getShips().begin(); it != RequestManager::m_map_creator->getShips().end(); ++it) {
+        auto ship = *it;
+        if(ship->getPublicKey() == public_key) {
+
+            if(ship->getPrivateKey() == private_key) {
+                RequestManager::m_map_creator->getShips().erase(it);
+                delete ship;
+                return;
+            }
+        }
+    }
 }
 
 void RequestManager::mouseButtonRequest(std::stringstream& ss, std::stringstream& response) {

@@ -1,5 +1,8 @@
 #pragma once 
 
+/**
+ * @brief Bullet class that stores all the neccessary logic about location, expiration date, type, etc.
+ */
 class Powerup : public MovableSprite {
 protected:
     Powerup() = default;

@@ -44,6 +44,8 @@ public:
                                    //When the request reading completes, or an error occurs, the callback method onRequestReceived() is called.
                                    onRequestReceived(ec,
                                                      bytes_transferred);
+
+                                    delete this;
                                });
     }
 

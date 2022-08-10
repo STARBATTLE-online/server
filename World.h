@@ -7,8 +7,8 @@
 
 #include <ranges>
 
-/*
- * This class is used for storing and managing all the game state.
+/**
+ * @brief This class is used for storing and managing all the game state.
  */
 class World
 {
@@ -47,6 +47,8 @@ public:
 		for(auto el : explosions) delete el;
 		for(auto el : bullets) delete el;
 	};
+
+	World(const World& other) {}
 
 	void shoot(Ship* ship) {
 		shoot(ship->getMouseCoords().first, ship->getMouseCoords().second, ship);
@@ -133,12 +135,17 @@ public:
 	void tick() {
 		std::vector<MovableSprite*> erased;
 
-		for (auto astroid : asteroids)
+		for (auto asteroid : asteroids)
 		{
-			astroid->move();
+			asteroid->move();
 		}
 		for (auto ship : ships)
 		{
+			// Regeneration. 
+			if(ship->getHealth() < 10 && ship->getHealth() > 0 && tick_count % 200 == 1) {
+				ship->setHealth(ship->getHealth() + 1);
+			}
+
 			ship->move();
 			ship->tick();
 

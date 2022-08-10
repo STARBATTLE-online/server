@@ -1,5 +1,8 @@
 #pragma once
 
+/**
+ * @brief Explosion class contains the starting time of the explosion and will be deleted after a certain amoun of ticks
+ */
 class Explosion : public MovableSprite {
 protected:
     Explosion() = default;
