@@ -1,5 +1,7 @@
 # server
 
+Start server:```g++ -std=c++20 ./main.cpp -O3 && ./a.out```
+
 ```diff
 TODO:  
 + убрать утечки
