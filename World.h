@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Asteroid.h"
 #include "Ship.h"
 #include "Rotation.h"
@@ -52,6 +53,14 @@ public:
 
 	void shoot(Ship* ship) {
 		shoot(ship->getMouseCoords().first, ship->getMouseCoords().second, ship);
+	}
+
+	void rightClick(Ship* ship) {
+		rightClick(ship->getMouseCoords().first, ship->getMouseCoords().second, ship);
+	}
+
+	void rightClick(double target_x, double target_y, Ship* ship) {
+		ship->boost();
 	}
 
 	// TODO: Verify that this works
@@ -119,7 +128,27 @@ public:
 		ships.back()->setRotation(rot);
 		ships.back()->setCoords(x, y);
 
+		public_id_to_ship[ships.back()->getPublicKey()] = ships.back();
+		ship_to_public_id[ships.back()] = ships.back()->getPublicKey();
 		return ships.back();
+	}
+
+	Ship* generateEnemy(int x, int y) {
+		ships.push_back(new Ship(192, 192));
+		ships.back()->setRotation(Rotation::Left);
+		ships.back()->setCoords(x, y);
+
+		public_id_to_ship[ships.back()->getPublicKey()] = ships.back();
+		ship_to_public_id[ships.back()] = ships.back()->getPublicKey();
+		return ships.back();
+	}
+
+	Ship* getShipByPublicID(uint64_t id) {
+		return public_id_to_ship[id];
+	}
+
+	uint64_t getPublicIDByShip(Ship* ship) {
+		return ship_to_public_id[ship];
 	}
 	
     /*
@@ -141,11 +170,6 @@ public:
 		}
 		for (auto ship : ships)
 		{
-			// Regeneration. 
-			if(ship->getHealth() < 10 && ship->getHealth() > 0 && tick_count % 200 == 1) {
-				ship->setHealth(ship->getHealth() + 1);
-			}
-
 			ship->move();
 			ship->tick();
 
@@ -227,7 +251,16 @@ public:
 			return false;
 		});
 
-		for(const auto& el : erased) delete el;
+		for(const auto& el : erased) {
+			if(dynamic_cast<Ship*>(el)) {
+				auto r = dynamic_cast<Ship*>(el);
+				auto id = ship_to_public_id[r]; 
+				ship_to_public_id[r] = 0;
+				public_id_to_ship[id] = nullptr;
+			}
+			
+			delete el;
+		}
 
 		tryGenerateAsteroid();
 
@@ -269,6 +302,8 @@ public:
 						powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 					} else if(rand() % 100 > 88) {
 						powerups.push_back(new Barrage(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
+					} else if(rand() % 100 > 81) {
+						powerups.push_back(new Heal(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 					}
 				}
 				erased.push_back(ptr);
@@ -354,6 +389,16 @@ public:
 			}
 		}
 
+		for(auto it = ships.rbegin(); it != ships.rend(); ++it) {
+			auto ptr = *(--(it.base()));
+			if(ptr->getTicksSinceLastSeen() >= 500) {
+				explosions.push_back(new BigExplosion(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
+				erased.push_back(ptr);
+
+				ships.erase(--(it.base()));
+			}
+		}
+
 		for(auto& el : erased) delete el;
 	}
 
@@ -373,7 +418,7 @@ public:
 
 		for (auto ship : ships)
 		{
-			ss << ship->serialize() << " " << scores[ship->getPrivateKey()] << " ";
+			ss << ship->serialize() << " " << scores[ship->getPublicKey()] << " ";
 		}
 
 		for (auto bullet : bullets)
@@ -421,6 +466,7 @@ protected:
 	std::vector<Powerup*> powerups;
 
 	std::unordered_map<uint64_t, int> scores;
-
+	std::map<uint64_t, Ship*> public_id_to_ship;
+	std::map<Ship*, uint64_t> ship_to_public_id;
 	uint64_t tick_count = 0;
 };

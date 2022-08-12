@@ -101,22 +101,32 @@ void RequestManager::mouseButtonRequest(std::stringstream& ss, std::stringstream
     std::string mb;
     ss >> mb >> public_key >> private_key;
 
-    if(mb != "L") {
-        response << "OK";
-        return;
-    }
-
     auto ships = RequestManager::m_map_creator->getShips();
 
-    for(auto& ship : ships) {
-        if(ship->getPublicKey() == public_key) {
-            if(ship->getPrivateKey() == private_key) {
-                RequestManager::m_map_creator->shoot(ship);
-                response << "OK";
-                return;
-            } else {
-                response << "INVALID_PRIVATE_KEY";
-                return;
+    if(mb == "L") {
+        for(auto& ship : ships) {
+            if(ship->getPublicKey() == public_key) {
+                if(ship->getPrivateKey() == private_key) {
+                    RequestManager::m_map_creator->shoot(ship);
+                    response << "OK";
+                    return;
+                } else {
+                    response << "INVALID_PRIVATE_KEY";
+                    return;
+                }
+            }
+        }
+    } else {
+        for(auto& ship : ships) {
+            if(ship->getPublicKey() == public_key) {
+                if(ship->getPrivateKey() == private_key) {
+                    RequestManager::m_map_creator->rightClick(ship);
+                    response << "OK";
+                    return;
+                } else {
+                    response << "INVALID_PRIVATE_KEY";
+                    return;
+                }
             }
         }
     }
@@ -161,10 +171,14 @@ void RequestManager::initRequest(std::stringstream& ss, std::stringstream& respo
     
     auto r = RequestManager::m_map_creator->AddShip(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, Rotation::Top);
     auto coords = r->getCoordsGlobal();
-    response << "INIT " << std::to_string(r->getPublicKey()) << " " << std::to_string(r->getPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
+    response << "INIT " << gameVersion << " " << std::to_string(r->getPublicKey()) << " " << std::to_string(r->getPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
             << std::to_string((int)coords.second) << " " << std::to_string(r->getSpriteID()) << " " << std::to_string(MAP_WIDTH) << " " << std::to_string(MAP_HEIGHT);
 }
 
 void RequestManager::tickRequest(std::stringstream& ss, std::stringstream& response) {
+    uint64_t public_key;
+    ss >> public_key;
+    auto r = RequestManager::m_map_creator->getShipByPublicID(public_key);
+    if(r) r->resetTicksSinceLastSeen();
     response << "TICK " << RequestManager::m_map_creator->serialize();
 }

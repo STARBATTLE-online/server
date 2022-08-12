@@ -18,7 +18,7 @@ Rotation RotationFromString(std::string s) {
         return Top;
     } else if(s == "L") {
         return Left;
-    } else if(s == "D") {
+    } else if(s == "B") {
         return Bottom;
     } else if(s == "R") {
         return Right;

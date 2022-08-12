@@ -2,7 +2,7 @@
 #include "MovableSprite.h"
 #include "World.h"
 #include "Rotation.h"
-
+#include <algorithm>
 /**
  * @brief Bullet class that stores all the neccessary logic about bullet, its position, sender, etc.
  */
@@ -35,7 +35,7 @@ public:
 
 	~Bullet() = default;
 
-	int lifespan = 80;
+	int lifespan = 100;
 	uint64_t sender_id = 0;
 };
 
@@ -86,8 +86,13 @@ public:
 
 		if (barrage_duration) 
 			--barrage_duration;
-	}
 
+		if (boost_cooldown)
+			--boost_cooldown;
+
+		ticks_since_last_seen++;
+	}
+	
 	void useImpulse() {
 		x_speed /= impulse;
 		y_speed /= impulse;
@@ -102,6 +107,7 @@ public:
 	}
 
 	void setMovementDirection(FRKey k) {
+		if(boost_cooldown > 320) return;
 		switch (k) {
 		case FRKey::RIGHT:
 			x_speed = engine_power_speed;
@@ -130,7 +136,7 @@ public:
 	}
 
 	uint64_t getDestructionScore() override {
-		return 100;
+		return 25;
 	}
 
 	uint64_t getPrivateKey() {
@@ -208,10 +214,46 @@ public:
 		hidden_protection = duration;
 	}
 
-	int getShieldDuration() {
+	int getShieldDuration() const {
 		return protection;
 	}
 
+	int getTicksSinceLastSeen() const {
+		return ticks_since_last_seen;
+	}
+
+	void resetTicksSinceLastSeen() {
+		ticks_since_last_seen = 0;
+	}
+
+	void heal(uint64_t amount) {
+		hp = std::min(hp + amount, (uint64_t)10);
+	}
+	
+	void boost() {
+		auto spd = getSpeed();
+		if(boost_cooldown) {
+			return;
+		}
+		boost_cooldown = 400;
+
+		switch(getRotation()) {
+		case Rotation::Top:
+			setSpeed(spd.first, spd.second - 25.);
+			break;
+		case Rotation::Left:
+			setSpeed(spd.first - 25., spd.second);
+			break;
+		case Rotation::Bottom:
+			setSpeed(spd.first, spd.second + 25.);
+			break;
+		case Rotation::Right:
+			setSpeed(spd.first + 25., spd.second);
+			break;
+		default:
+			break;
+		}
+	}
 protected:
 	Rotation rotation;
 	double impulse = 1.01;
@@ -231,4 +273,30 @@ protected:
 	int protection = 200;
 	int hidden_protection = 0;
 	int barrage_duration = 0;
+
+	int ticks_since_last_seen = 0;
+	int boost_cooldown = 0;
+};
+
+class AIShip : public Ship {
+public:
+	AIShip() = default;
+	AIShip(double sprite_width, double sprite_height) {
+		width = sprite_width;
+		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
+
+		sprite_id = rand() % 6 + 1;
+
+		mass = 10;
+	};
+
+
+	std::string getType() override {
+		return "AIShip";
+	}
+
+	~AIShip() override = default;
 };

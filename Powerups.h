@@ -84,3 +84,27 @@ public:
         ship->setBarrageDuration(200);
     }
 };
+
+class Heal : public Powerup {
+public:
+    Heal(int x, int y, uint64_t creation_tick) {
+        width = 126;
+        height = 126;
+
+        setCoordsByCenter(x, y);
+        this->creation_tick = creation_tick;
+    }
+
+    std::string getType() override {
+		return "Heal";
+	}
+
+    ~Heal() override = default;
+
+    /* 
+     * Is supposed to modify the ship 
+     */
+    void activate(Ship* ship) override {
+        ship->heal(3);
+    }
+};

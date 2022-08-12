@@ -42,7 +42,7 @@ public:
 	}
 
 	uint64_t getDestructionScore() override {
-		return 5.;
+		return 2;
 	}
 };
 
@@ -64,6 +64,6 @@ public:
 	}
 
 	uint64_t getDestructionScore() override {
-		return 2.;
+		return 1;
 	}
 };

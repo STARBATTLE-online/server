@@ -32,7 +32,7 @@ public:
 
 	virtual std::pair<double, double> getSpeed()
 	{
-		return std::make_pair(y_speed, x_speed);
+		return std::make_pair(x_speed, y_speed);
 	}
 
 	virtual double getMass()
