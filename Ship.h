@@ -35,8 +35,22 @@ public:
 
 	~Bullet() = default;
 
+	virtual int getDamage() {
+		return 2;
+	}
+
 	int lifespan = 100;
 	uint64_t sender_id = 0;
+};
+
+class AIBullet : public Bullet {
+public:
+	AIBullet(int x, int y, double x_speed, double y_speed) : Bullet(x, y, x_speed, y_speed) {}
+	int getDamage() override {
+		return 4;
+	}
+
+	~AIBullet() = default;
 };
 
 /**
@@ -54,7 +68,7 @@ public:
 
 		sprite_id = rand() % 6 + 1;
 
-		mass = 10;
+		mass = 30;
 	};
 
 	~Ship() override = default;
@@ -92,7 +106,7 @@ public:
 
 		ticks_since_last_seen++;
 	}
-	
+
 	void useImpulse() {
 		x_speed /= impulse;
 		y_speed /= impulse;
@@ -126,10 +140,31 @@ public:
 		}
 	}
 
+	std::vector<Bullet*> shoot(double target_x, double target_y) {
+		if(getReloadTime() != 0) return {};
+		// Calculate target angle
+		double target_angle = atan2(target_y - getCenterGlobal().second, target_x - getCenterGlobal().first);
+		// Calculate speed along axises
+		double x_speed = cos(target_angle) * BULLET_SPEED;
+		double y_speed = sin(target_angle) * BULLET_SPEED;
+		// Create bullet
+		auto bullet = getBullet(getCenterGlobal().first, getCenterGlobal().second, x_speed, y_speed);
+		// Set bullet speed
+		bullet->setSpeed(x_speed, y_speed);
+		bullet->sender_id = getPublicKey();
+		setReloadTime(getReloadCooldown());
+
+		return { bullet };
+	}
+
 	void sendMouseMoveEvent(int x, int y) {
 		mouse_x = x;
 		mouse_y = y;
 	};
+
+	virtual Bullet* getBullet(double a, double b, double c, double d) {
+		return new Bullet(a, b, c, d);
+	}
 
 	void setBarrageDuration(int duration) {
 		barrage_duration = duration;
@@ -158,7 +193,7 @@ public:
 	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << getType() << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
+		ss << "Ship" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
 
 		return ss.str();
 	}
@@ -182,6 +217,11 @@ public:
 	int getReloadTime()
 	{
 		return reload_time;
+	}
+
+	virtual int getReloadCooldown()
+	{
+		return 25;
 	}
 
 	double getSpeedCeiling() override {
@@ -290,7 +330,7 @@ public:
 
 		sprite_id = rand() % 6 + 1;
 
-		mass = 10;
+		mass = 30;
 	};
 
 
@@ -298,5 +338,62 @@ public:
 		return "AIShip";
 	}
 
+	int getReloadCooldown() override {
+		return 50;
+	}
+
+	Bullet* getBullet(double a, double b, double c, double d) override {
+		return new AIBullet(a, b, c, d);
+	}
+
 	~AIShip() override = default;
+};
+
+class MassShooter : public Ship {
+public:
+	MassShooter() = default;
+	MassShooter(double sprite_width, double sprite_height) {
+		width = sprite_width;
+		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
+
+		sprite_id = rand() % 6 + 1;
+
+		mass = 30;
+	};
+
+
+	std::string getType() override {
+		return "MassShooter";
+	}
+
+	std::vector<Bullet*> shoot(double target_x, double target_y) {
+		if(getReloadTime() != 0) return {};
+		// Calculate target angle
+		double target_angle = atan2(target_y - getCenterGlobal().second, target_x - getCenterGlobal().first);
+		// Create bullet
+		auto bullet = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle) * BULLET_SPEED, sin(target_angle) * BULLET_SPEED);
+		auto bullet_left = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle + 0.0833) * BULLET_SPEED, sin(target_angle + 0.0833) * BULLET_SPEED);
+		auto bullet_right = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle - 0.0833) * BULLET_SPEED, sin(target_angle - 0.0833) * BULLET_SPEED);
+
+		// Set bullet speed
+		bullet->sender_id = getPublicKey();
+
+		bullet_left->sender_id = getPublicKey();
+
+		bullet_right->sender_id = getPublicKey();
+
+		setReloadTime(getReloadCooldown());
+
+		return { bullet_left, bullet, bullet_right };
+	}
+
+
+	Bullet* getBullet(double a, double b, double c, double d) override {
+		return new Bullet(a, b, c, d);
+	}
+
+	~MassShooter() override = default;
 };

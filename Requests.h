@@ -169,7 +169,7 @@ void RequestManager::keyRequest(std::stringstream& ss, std::stringstream& respon
 
 void RequestManager::initRequest(std::stringstream& ss, std::stringstream& response) {
     
-    auto r = RequestManager::m_map_creator->AddShip(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, Rotation::Top);
+    auto r = RequestManager::m_map_creator->addShip(rand() % MAP_WIDTH, rand() % MAP_HEIGHT, Rotation::Top);
     auto coords = r->getCoordsGlobal();
     response << "INIT " << gameVersion << " " << std::to_string(r->getPublicKey()) << " " << std::to_string(r->getPrivateKey()) << " " << std::to_string((int)coords.first) << " " 
             << std::to_string((int)coords.second) << " " << std::to_string(r->getSpriteID()) << " " << std::to_string(MAP_WIDTH) << " " << std::to_string(MAP_HEIGHT);

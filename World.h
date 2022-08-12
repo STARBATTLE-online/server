@@ -65,18 +65,9 @@ public:
 
 	// TODO: Verify that this works
 	void shoot(double target_x, double target_y, Ship* ship) {
-		if(ship->getReloadTime() != 0) return;
-		// Calculate target angle
-		double target_angle = atan2(target_y - ship->getCenterGlobal().second, target_x - ship->getCenterGlobal().first);
-		// Calculate speed along axises
-		double x_speed = cos(target_angle) * BULLET_SPEED;
-		double y_speed = sin(target_angle) * BULLET_SPEED;
-		// Create bullet
-		bullets.push_back(new Bullet(ship->getCenterGlobal().first, ship->getCenterGlobal().second, x_speed, y_speed));
-		// Set bullet speed
-		bullets.back()->setSpeed(x_speed, y_speed);
-		bullets.back()->sender_id = ship->getPublicKey();
-		ship->setReloadTime(RELOAD_TIME);
+		auto r = ship->shoot(target_x, target_y);
+
+		bullets.insert(bullets.end(), r.begin(), r.end());
 	}
 
 	Asteroid* asteroidCollisions(MovableSprite* object) {
@@ -123,8 +114,8 @@ public:
 	/*
 	 * Adds a ship with the specified position and rotation to the game field.
 	 */
-	Ship* AddShip(int x, int y, Rotation rot) {
-		ships.push_back(new Ship(192, 192));
+	Ship* addShip(int x, int y, Rotation rot) {
+		ships.push_back(new MassShooter(192, 192));
 		ships.back()->setRotation(rot);
 		ships.back()->setCoords(x, y);
 
@@ -134,7 +125,7 @@ public:
 	}
 
 	Ship* generateEnemy(int x, int y) {
-		ships.push_back(new Ship(192, 192));
+		ships.push_back(new AIShip(192, 192));
 		ships.back()->setRotation(Rotation::Left);
 		ships.back()->setCoords(x, y);
 
@@ -325,7 +316,7 @@ public:
 				scores[r1->sender_id] += (*it)->getDestructionScore();
 				explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
 
-				(*it)->takeDamage(2);
+				(*it)->takeDamage(r1->getDamage());
 				if((*it)->getHealth() <= 0) {
 					erased.push_back(ptr);
 					ships.erase(--(it.base()));
@@ -400,6 +391,32 @@ public:
 		}
 
 		for(auto& el : erased) delete el;
+
+		if(tick_count % 900 == 0) {
+			auto enemy = generateEnemy(0 + rand() % MAP_WIDTH, 0 + rand() % MAP_HEIGHT);
+		}
+
+		for(auto& el : ships) {
+			if(el->getType() != "AIShip") continue;
+			el->resetTicksSinceLastSeen();
+			for(auto& el2 : ships) {
+				if(el2->getType() == "AIShip") continue;
+				auto [mouse_x, mouse_y] = el2->getCenterGlobal();
+                el->sendMouseMoveEvent(mouse_x, mouse_y);
+                el->setRotation(RotationFromString("B"));
+				shoot(el);
+				// Get vector between two ships
+				auto [x, y] = el->getCenterGlobal();
+				double diff_x = mouse_x - x, diff_y = mouse_y - y;
+				// Normalize new speed.
+				double len = std::sqrt(diff_x * diff_x + diff_y * diff_y);
+				len = std::max(0.1, len);
+				diff_x /= len;
+				diff_y /= len;
+
+				el->setSpeed(diff_x * 7, diff_y * 7);
+			}
+		}
 	}
 
 	/*
