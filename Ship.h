@@ -140,7 +140,7 @@ public:
 		}
 	}
 
-	std::vector<Bullet*> shoot(double target_x, double target_y) {
+	virtual std::vector<Bullet*> shoot(double target_x, double target_y) {
 		if(getReloadTime() != 0) return {};
 		// Calculate target angle
 		double target_angle = atan2(target_y - getCenterGlobal().second, target_x - getCenterGlobal().first);
@@ -193,7 +193,7 @@ public:
 	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << "Ship" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << getSpriteID() << " " << protection << " " << hp << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
+		ss << "Ship" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << x_speed << " " << y_speed  << " " << getSpriteID() << " " << protection << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
 
 		return ss.str();
 	}
@@ -232,7 +232,7 @@ public:
 		return barrage_duration;
 	}
 
-	void takeDamage(int damage) {
+	virtual void takeDamage(int damage) {
 		if(protection > 0 || hidden_protection > 0) return;
 
 		hp -= damage;
@@ -266,11 +266,11 @@ public:
 		ticks_since_last_seen = 0;
 	}
 
-	void heal(uint64_t amount) {
-		hp = std::min(hp + amount, (uint64_t)10);
+	virtual void heal(uint64_t amount) {
+		hp = std::min(hp + amount, (uint64_t)getMaxHP());
 	}
 	
-	void boost() {
+	virtual void ability() {
 		auto spd = getSpeed();
 		if(boost_cooldown) {
 			return;
@@ -294,6 +294,11 @@ public:
 			break;
 		}
 	}
+
+	virtual int getMaxHP() {
+		return 10;
+	}
+
 protected:
 	Rotation rotation;
 	double impulse = 1.01;
@@ -306,7 +311,7 @@ protected:
 	uint64_t public_key = 0;
 
 	uint64_t sprite_id = 0;
-	int hp = 10; 
+	int hp = getMaxHP(); 
 	int mouse_x = 0;
 	int mouse_y = 0;
 
@@ -359,7 +364,7 @@ public:
 		private_key = rand();
 		public_key = rand();
 
-		sprite_id = rand() % 6 + 1;
+		sprite_id = 2;
 
 		mass = 30;
 	};
@@ -369,14 +374,14 @@ public:
 		return "MassShooter";
 	}
 
-	std::vector<Bullet*> shoot(double target_x, double target_y) {
+	std::vector<Bullet*> shoot(double target_x, double target_y) override {
 		if(getReloadTime() != 0) return {};
 		// Calculate target angle
 		double target_angle = atan2(target_y - getCenterGlobal().second, target_x - getCenterGlobal().first);
 		// Create bullet
 		auto bullet = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle) * BULLET_SPEED, sin(target_angle) * BULLET_SPEED);
-		auto bullet_left = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle + 0.0833) * BULLET_SPEED, sin(target_angle + 0.0833) * BULLET_SPEED);
-		auto bullet_right = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle - 0.0833) * BULLET_SPEED, sin(target_angle - 0.0833) * BULLET_SPEED);
+		auto bullet_left = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle + 0.25) * BULLET_SPEED, sin(target_angle + 0.25) * BULLET_SPEED);
+		auto bullet_right = getBullet(getCenterGlobal().first, getCenterGlobal().second, cos(target_angle - 0.25) * BULLET_SPEED, sin(target_angle - 0.25) * BULLET_SPEED);
 
 		// Set bullet speed
 		bullet->sender_id = getPublicKey();
@@ -396,4 +401,197 @@ public:
 	}
 
 	~MassShooter() override = default;
+};
+
+class FastBoy : public Ship {
+public:
+	FastBoy() = default;
+	FastBoy(double sprite_width, double sprite_height) {
+		width = sprite_width;
+		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
+
+		sprite_id = 3;
+
+		engine_power_speed = 15;
+
+		mass = 30;
+	};
+
+
+	std::string getType() override {
+		return "FastBoy";
+	}
+
+	Bullet* getBullet(double a, double b, double c, double d) override {
+		return new Bullet(a, b, c, d);
+	}
+
+	int getReloadCooldown() override {
+		return 15;
+	}
+
+	~FastBoy() override = default;
+};
+
+class FatGuy : public Ship {
+public:
+	FatGuy() = default;
+	FatGuy(double sprite_width, double sprite_height) {
+		width = sprite_width;
+		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
+
+		sprite_id = 5;
+
+		mass = 100;
+
+		hp = 20;
+	};
+
+	std::string getType() override {
+		return "FatGuy";
+	}
+
+	Bullet* getBullet(double a, double b, double c, double d) override {
+		return new Bullet(a, b, c, d);
+	}
+
+	int getMaxHP() override {
+		return 20;
+	}
+
+	void ability() override {
+		if(boost_cooldown) {
+			return;
+		}
+		boost_cooldown = 400;
+
+		setShieldDuration(200);
+	}
+
+	~FatGuy() override = default;
+};
+
+
+class HomingMissile : public Bullet {
+private:
+	MovableSprite* target = nullptr;
+public:
+	HomingMissile(int x, int y, double x_speed, double y_speed) : Bullet(x, y, x_speed, y_speed) {}
+	~HomingMissile() override = default;
+
+	int getMaxAcceleration() {
+		return 10;
+	}
+
+	void setTarget(MovableSprite* spr) {
+		target = spr;
+	}
+
+	MovableSprite* getTarget() {
+		return target;
+	}
+};
+
+class Deadeye : public Ship {
+public:
+	Deadeye() = default;
+	Deadeye(double sprite_width, double sprite_height) {
+		width = sprite_width;
+		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
+
+		sprite_id = 4;
+
+		mass = 30;
+
+		hp = 10;
+	};
+
+	std::string getType() override {
+		return "Deadeye";
+	}
+
+	Bullet* getBullet(double a, double b, double c, double d) override {
+		return new HomingMissile(a, b, c, d);
+	}
+
+	~Deadeye() override = default;
+};
+
+class EnemySpawner : public Ship {
+	int status = 0;
+public:
+	EnemySpawner() = default;
+	EnemySpawner(double sprite_width, double sprite_height) {
+		width = sprite_width;
+		height = sprite_height;
+
+		private_key = rand();
+		public_key = rand();
+
+		sprite_id = 5;
+
+		mass = 100000;
+
+		hp = 1000;
+	};
+
+	std::string getType() override {
+		return "EnemySpawner";
+	}
+
+	Bullet* getBullet(double a, double b, double c, double d) override {
+		return new Bullet(a, b, c, d);
+	}
+
+	int getMaxHP() override {
+		return 1000;
+	}
+
+	std::string serialize() override {
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(0);
+		ss << "EnemySpawner" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << status << " ";
+
+		return ss.str();
+	}
+
+	void setStatus(int a) {
+		status = a;
+	}
+
+	int getStatus() {
+		return status;
+	}
+
+	void heal(uint64_t amount) override {
+		hp = std::min(hp + amount, (uint64_t)getMaxHP());
+		//updateState();
+	}
+
+	void takeDamage(int damage) override {
+		if(protection > 0 || hidden_protection > 0) return;
+
+		hp -= damage;
+
+		//updateState();
+	}
+
+	void updateState() {
+		/*if(rand() % 2) {
+			setStatus(1);
+		} else {
+			setStatus(2);
+		}*/
+	}
+
+	~EnemySpawner() override = default;
 };

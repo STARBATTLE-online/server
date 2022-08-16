@@ -4,6 +4,7 @@
 #include <cmath>
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 #include "GlobalVariables.h"
 
@@ -46,6 +47,18 @@ public:
 		return sqrt(pow(getCenterGlobal().first - object->getCenterGlobal().first, 2)
 			+ pow(getCenterGlobal().second - object->getCenterGlobal().second, 2))
 			- getRadius() - object->getRadius();
+	}
+
+	double realDistance(HeadSprite* object) {
+		double dist = 100500.;
+		for(int i = -1; i <= 1; ++i) {
+			for(int j = -1; j <= 1; ++j) {
+				dist = std::min(dist, (double)sqrt(pow(getCenterGlobal().first - object->getCenterGlobal().first + i * MAP_WIDTH, 2)
+					+ pow(getCenterGlobal().second - object->getCenterGlobal().second + j * MAP_HEIGHT, 2)));
+			}
+		}
+
+		return dist;
 	}
 
 	virtual std::string getType() {

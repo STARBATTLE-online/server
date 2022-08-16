@@ -34,6 +34,23 @@ protected:
     uint64_t creation_tick = 0;
 };
 
+class ExtremelyBigExplosion : public Explosion {
+public:
+    ExtremelyBigExplosion(int x, int y, uint64_t creation_tick) {
+        width = 1000;
+        height = 1000;
+
+        setCoordsByCenter(x, y);
+        this->creation_tick = creation_tick;
+    }
+
+    std::string getType() override {
+		return "ExtremelyBigExplosion";
+	}
+
+    ~ExtremelyBigExplosion() override = default;
+};
+
 class BigExplosion : public Explosion {
 public:
     BigExplosion(int x, int y, uint64_t creation_tick) {

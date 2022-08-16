@@ -39,8 +39,13 @@ public:
 			}
 		}
 
+		ships.push_back(new EnemySpawner(876, 876));
+		ships.back()->setCoords(0, 0);
 
+		public_id_to_ship[ships.back()->getPublicKey()] = ships.back();
+		ship_to_public_id[ships.back()] = ships.back()->getPublicKey();
 	};
+
 	~World() {
 		for(auto el : ships) delete el;
 		for(auto el : asteroids) delete el;
@@ -60,7 +65,7 @@ public:
 	}
 
 	void rightClick(double target_x, double target_y, Ship* ship) {
-		ship->boost();
+		ship->ability();
 	}
 
 	// TODO: Verify that this works
@@ -115,7 +120,24 @@ public:
 	 * Adds a ship with the specified position and rotation to the game field.
 	 */
 	Ship* addShip(int x, int y, Rotation rot) {
-		ships.push_back(new MassShooter(192, 192));
+		auto r = rand() % 6;
+		switch(r) {
+			case 0:
+			case 1:
+			case 2:
+				ships.push_back(new MassShooter(192, 192));
+				break;
+			case 3:
+				ships.push_back(new Deadeye(192, 192));
+				break;
+			case 4:
+				ships.push_back(new FatGuy(192, 192));
+				break;
+			case 5:
+				ships.push_back(new FastBoy(192, 192));
+				break;
+		}
+
 		ships.back()->setRotation(rot);
 		ships.back()->setCoords(x, y);
 
@@ -211,7 +233,7 @@ public:
 		for (auto bullet : bullets)
 		{
 			bullet->move();
-			--bullet->lifespan;
+			if(!dynamic_cast<HomingMissile*>(bullet)) --bullet->lifespan;
 		}
 
 		std::erase_if(bullets, [&erased] (Bullet* bullet) {
@@ -280,7 +302,7 @@ public:
 				scores[r->sender_id] += (*it)->getDestructionScore();
 
 				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
-				if(ptr->getType() == "BigAsteroid") {
+				if(dynamic_cast<BigAsteroid*>(ptr)) {
 					asteroids.push_back(new SmallAsteroid(ptr->getCenterGlobal().first - 5 + (rand() % 5), ptr->getCenterGlobal().second - 5 + (rand() % 5), 
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 
@@ -288,7 +310,7 @@ public:
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 				}
 
-				if(ptr->getType() == "SmallAsteroid") {
+				if(dynamic_cast<SmallAsteroid*>(ptr)) {
 					if(rand() % 100 > 90) {
 						powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 					} else if(rand() % 100 > 88) {
@@ -307,14 +329,34 @@ public:
 
 			asteroidCollisions(*it);
 		}
+
 		for (auto it = ships.rbegin(); it != ships.rend(); ++it)
 		{
+			if(dynamic_cast<AIShip*>((*it)) || dynamic_cast<EnemySpawner*>((*it))) 
+				(*it)->resetTicksSinceLastSeen();
+
+			auto r = dynamic_cast<EnemySpawner*>(*it);
+			if(r) {
+				r->setCoordsByCenter(MAP_WIDTH / 2, MAP_HEIGHT / 2); 
+
+				if(tick_count % 1024 > 512) {
+					
+					r->setStatus(2);
+				} else {
+					r->setStatus(1);
+				}
+			}
+
 			auto r1 = bulletCollisions(*it, (*it)->getPublicKey());
 
 			if(r1) {
 				auto ptr = *(--(it.base()));
 				scores[r1->sender_id] += (*it)->getDestructionScore();
-				explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
+				if(dynamic_cast<EnemySpawner*>((*it))) {
+					explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
+				} else {
+					explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
+				}
 
 				(*it)->takeDamage(r1->getDamage());
 				if((*it)->getHealth() <= 0) {
@@ -332,7 +374,7 @@ public:
 			if(r2) {
 				auto ptr = *(--(it.base()));
 
-				(*it)->takeDamage(((r2->getType() == "BigAsteroid") ? 3 : 2));
+				(*it)->takeDamage(((dynamic_cast<BigAsteroid*>(r2)) ? 3 : 2));
 				(*it)->setHiddenShieldDuration(3);
 				if((*it)->getHealth() <= 0) {
 					explosions.push_back(new BigExplosion(r2->getCenterGlobal().first, r2->getCenterGlobal().second, tick_count));
@@ -381,6 +423,7 @@ public:
 		}
 
 		for(auto it = ships.rbegin(); it != ships.rend(); ++it) {
+
 			auto ptr = *(--(it.base()));
 			if(ptr->getTicksSinceLastSeen() >= 500) {
 				explosions.push_back(new BigExplosion(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
@@ -390,17 +433,28 @@ public:
 			}
 		}
 
-		for(auto& el : erased) delete el;
+		for(auto& el : erased) {
+			if(!dynamic_cast<Bullet*>(el)) {
+				for(auto& bullet : bullets) {
+					auto bul = dynamic_cast<HomingMissile*>(bullet);
+					if(!bul) continue;
 
-		if(tick_count % 900 == 0) {
+					if(bul->getTarget() == el) {
+						bul->setTarget(nullptr);
+					}
+				}
+			}
+			delete el;
+		}
+
+		if(tick_count % 900 == 0 && ships.size() <= 5) {
 			auto enemy = generateEnemy(0 + rand() % MAP_WIDTH, 0 + rand() % MAP_HEIGHT);
 		}
 
 		for(auto& el : ships) {
-			if(el->getType() != "AIShip") continue;
-			el->resetTicksSinceLastSeen();
+			if(dynamic_cast<AIShip*>(el)) continue;
 			for(auto& el2 : ships) {
-				if(el2->getType() == "AIShip") continue;
+				if(dynamic_cast<AIShip*>(el2) || dynamic_cast<EnemySpawner*>(el2)) continue;
 				auto [mouse_x, mouse_y] = el2->getCenterGlobal();
                 el->sendMouseMoveEvent(mouse_x, mouse_y);
                 el->setRotation(RotationFromString("B"));
@@ -415,6 +469,54 @@ public:
 				diff_y /= len;
 
 				el->setSpeed(diff_x * 7, diff_y * 7);
+			}
+		}
+
+		for(auto& bullet : bullets) {
+			auto el = dynamic_cast<HomingMissile*>(bullet);
+			if(el) {
+				//Find target
+				MovableSprite* bestTarget = nullptr;
+				
+				if(!el->getTarget()) {
+					double dist = 100000;
+					for(const auto& ship : ships) {
+						if(ship->getPublicKey() == el->sender_id) continue;
+						double tmp = el->realDistance(ship);
+						if(tmp < dist) {
+							bestTarget = ship;
+							dist = tmp;
+						}
+					}
+
+					for(const auto& asteroid : asteroids) {
+						double tmp = el->realDistance(asteroid) * 1.5;
+						if(tmp < dist) {
+							bestTarget = asteroid;
+							dist = tmp;
+						}
+					}
+
+					el->setTarget(bestTarget);
+				}
+
+				// No ships
+				if(!el->getTarget()) break;
+
+				//Calculate and accelerate bullet accordingly
+				auto [x, y] = el->getCenterGlobal();
+				auto [vx, vy] = el->getSpeed();
+				auto [target_x, target_y] = el->getTarget()->getCenterGlobal();
+
+				double acc_x = target_x - x, acc_y = target_y - y;
+				double len = std::sqrt(acc_x * acc_x + acc_y * acc_y) + 0.001;
+
+				acc_x /= len / 2;
+				acc_y /= len / 2;
+
+				el->setSpeed(vx + acc_x, vy + acc_y);
+
+				el->truncateSpeed(15);
 			}
 		}
 	}
@@ -435,7 +537,11 @@ public:
 
 		for (auto ship : ships)
 		{
-			ss << ship->serialize() << " " << scores[ship->getPublicKey()] << " ";
+			ss << ship->serialize() << " ";
+			
+			if(dynamic_cast<EnemySpawner*>(ship)) {
+				ss << scores[ship->getPublicKey()] << " ";
+			}
 		}
 
 		for (auto bullet : bullets)
