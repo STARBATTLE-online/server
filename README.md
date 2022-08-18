@@ -1,6 +1,6 @@
 # server
 
-Start server:  ```g++ -std=c++20 ./main.cpp -O3 && ./a.out```
+Start server:  ```g++ -std=c++20 -Ofast -I/usr/local/include -I/usr/local/include/cppconn -lmysqlcppconn ./main.cpp && ./a.out```
 
 ```diff
 TODO:  
