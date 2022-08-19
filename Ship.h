@@ -214,6 +214,22 @@ public:
 		reload_time = time;
 	}
 
+	void setRotationFromSpeed() {
+		if( std::abs(x_speed) > std::abs(y_speed) ) {
+			if(x_speed > 0) {
+				rotation = Rotation::Right;
+			} else {
+				rotation = Rotation::Left;
+			}
+		} else {
+			if(y_speed > 0) {
+				rotation = Rotation::Bottom;
+			} else {
+				rotation = Rotation::Top;
+			}
+		}
+	}
+
 	int getReloadTime()
 	{
 		return reload_time;
@@ -333,7 +349,7 @@ public:
 		private_key = rand();
 		public_key = rand();
 
-		sprite_id = rand() % 6 + 1;
+		sprite_id = 7;
 
 		mass = 30;
 	};
@@ -350,6 +366,15 @@ public:
 	Bullet* getBullet(double a, double b, double c, double d) override {
 		return new AIBullet(a, b, c, d);
 	}
+
+	std::string serialize() override {
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(0);
+		ss << "Ship" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << x_speed << " " << y_speed  << " " << getSpriteID() << " " << protection << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << 1 << " " << getPublicKey() << " ";
+
+		return ss.str();
+	}
+
 
 	~AIShip() override = default;
 };
@@ -586,11 +611,7 @@ public:
 	}
 
 	void updateState() {
-		/*if(rand() % 2) {
-			setStatus(1);
-		} else {
-			setStatus(2);
-		}*/
+		
 	}
 
 	~EnemySpawner() override = default;

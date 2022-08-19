@@ -5,7 +5,7 @@
 #include "Rotation.h"
 #include "Explosion.h"
 #include "Powerups.h"
-
+#include "Animation.h"
 #include <ranges>
 
 /**
@@ -52,6 +52,7 @@ public:
 		for(auto el : powerups) delete el;
 		for(auto el : explosions) delete el;
 		for(auto el : bullets) delete el;
+		for(auto el : animations) delete el;
 	};
 
 	World(const World& other) {}
@@ -149,7 +150,7 @@ public:
 	Ship* generateEnemy(int x, int y) {
 		ships.push_back(new AIShip(192, 192));
 		ships.back()->setRotation(Rotation::Left);
-		ships.back()->setCoords(x, y);
+		ships.back()->setCoordsByCenter(x, y);
 
 		public_id_to_ship[ships.back()->getPublicKey()] = ships.back();
 		ship_to_public_id[ships.back()] = ships.back()->getPublicKey();
@@ -302,7 +303,7 @@ public:
 				scores[r->sender_id] += (*it)->getDestructionScore();
 
 				explosions.push_back(new BigExplosion(r->getCenterGlobal().first, r->getCenterGlobal().second, tick_count));
-				if(dynamic_cast<BigAsteroid*>(ptr)) {
+				if(ptr->getType() == "BigAsteroid") {
 					asteroids.push_back(new SmallAsteroid(ptr->getCenterGlobal().first - 5 + (rand() % 5), ptr->getCenterGlobal().second - 5 + (rand() % 5), 
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 
@@ -310,7 +311,7 @@ public:
 						(double)(rand() % 10 - 5) / 5, (double)(rand() % 10 - 5) / 5));
 				}
 
-				if(dynamic_cast<SmallAsteroid*>(ptr)) {
+				if(ptr->getType() == "SmallAsteroid") {
 					if(rand() % 100 > 90) {
 						powerups.push_back(new Shield(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 					} else if(rand() % 100 > 88) {
@@ -352,7 +353,7 @@ public:
 			if(r1) {
 				auto ptr = *(--(it.base()));
 				scores[r1->sender_id] += (*it)->getDestructionScore();
-				if(dynamic_cast<EnemySpawner*>((*it))) {
+				if((*it)->getType() == "EnemySpawner") {
 					explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
 				} else {
 					explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
@@ -374,7 +375,7 @@ public:
 			if(r2) {
 				auto ptr = *(--(it.base()));
 
-				(*it)->takeDamage(((dynamic_cast<BigAsteroid*>(r2)) ? 3 : 2));
+				(*it)->takeDamage(((r2->getType() == "BigAsteroid") ? 3 : 2));
 				(*it)->setHiddenShieldDuration(3);
 				if((*it)->getHealth() <= 0) {
 					explosions.push_back(new BigExplosion(r2->getCenterGlobal().first, r2->getCenterGlobal().second, tick_count));
@@ -433,6 +434,18 @@ public:
 			}
 		}
 
+		for(auto it = animations.rbegin(); it != animations.rend(); ++it) {
+			auto el = *it;
+			if(el->hasEnded()) {
+				if(el->getType() == "LeftShipAnimation") {
+					auto [x, y] = el->getCenterGlobal();
+					generateEnemy(x, y);
+					erased.push_back(el);
+					animations.erase(--(it.base()));
+				}
+			}
+		}
+
 		for(auto& el : erased) {
 			if(!dynamic_cast<Bullet*>(el)) {
 				for(auto& bullet : bullets) {
@@ -448,17 +461,21 @@ public:
 		}
 
 		if(tick_count % 900 == 0 && ships.size() <= 5) {
-			auto enemy = generateEnemy(0 + rand() % MAP_WIDTH, 0 + rand() % MAP_HEIGHT);
+			animations.push_back(new LeftShipAnimation());
+		}
+
+		for(auto& el : animations) {
+			el->tick();
 		}
 
 		for(auto& el : ships) {
-			if(dynamic_cast<AIShip*>(el)) continue;
+			if(el->getType() != "AIShip") continue;
 			for(auto& el2 : ships) {
 				if(dynamic_cast<AIShip*>(el2) || dynamic_cast<EnemySpawner*>(el2)) continue;
 				auto [mouse_x, mouse_y] = el2->getCenterGlobal();
                 el->sendMouseMoveEvent(mouse_x, mouse_y);
                 el->setRotation(RotationFromString("B"));
-				shoot(el);
+				//shoot(el);
 				// Get vector between two ships
 				auto [x, y] = el->getCenterGlobal();
 				double diff_x = mouse_x - x, diff_y = mouse_y - y;
@@ -468,7 +485,9 @@ public:
 				diff_x /= len;
 				diff_y /= len;
 
-				el->setSpeed(diff_x * 7, diff_y * 7);
+				el->setRotationFromSpeed();
+
+				el->setSpeed(diff_x * 5, diff_y * 5);
 			}
 		}
 
@@ -539,7 +558,7 @@ public:
 		{
 			ss << ship->serialize() << " ";
 			
-			if(dynamic_cast<EnemySpawner*>(ship)) {
+			if(ship->getType() != "EnemySpawner") {
 				ss << scores[ship->getPublicKey()] << " ";
 			}
 		}
@@ -557,6 +576,11 @@ public:
 		for (auto powerup : powerups)
 		{
 			ss << powerup->serialize() << " ";
+		}
+
+		for (auto animation : animations)
+		{
+			ss << animation->serialize() << " ";
 		}
 
 		return ss.str();
@@ -587,6 +611,7 @@ protected:
 	std::vector<Bullet*> bullets;
 	std::vector<Explosion*> explosions;
 	std::vector<Powerup*> powerups;
+	std::vector<Animation*> animations;
 
 	std::unordered_map<uint64_t, int> scores;
 	std::map<uint64_t, Ship*> public_id_to_ship;

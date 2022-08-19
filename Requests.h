@@ -3,6 +3,14 @@
 #include <memory>
 #include "World.h"
 
+#include "mysql_connection.h"
+	
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
 /**
  * @brief RequestManager is used to create responses; singleton
  */
@@ -86,7 +94,6 @@ void RequestManager::closeRequest(std::stringstream& ss, std::stringstream& resp
     for(auto it = RequestManager::m_map_creator->getShips().begin(); it != RequestManager::m_map_creator->getShips().end(); ++it) {
         auto ship = *it;
         if(ship->getPublicKey() == public_key) {
-
             if(ship->getPrivateKey() == private_key) {
                 RequestManager::m_map_creator->getShips().erase(it);
                 delete ship;

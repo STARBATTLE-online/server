@@ -72,8 +72,8 @@ public:
 	}
 
 protected:
-	double width;
-	double height;
-	double global_x;
-	double global_y;
+	double width = 0.;
+	double height = 0.;
+	double global_x = 0.;
+	double global_y = 0.;
 };
