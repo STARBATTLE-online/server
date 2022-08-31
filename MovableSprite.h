@@ -126,6 +126,7 @@ public:
 		return false;
 	}
 
+	//speedup bug lives somewhere here
 	virtual std::pair<double, double> collide(MovableSprite *element)
 	{
 		double distanceSquared = pow(getCenterGlobal().first - element->getCenterGlobal().first, 2) + pow(getCenterGlobal().second - element->getCenterGlobal().second, 2);

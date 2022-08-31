@@ -1,4 +1,4 @@
-#define CURL_STATICLIB
+﻿#define CURL_STATICLIB
 
 #include <iostream>
 #include <random>
@@ -14,9 +14,11 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
+#include "Logger.hpp"
 #include "World.h"
 #include "server.h"
 #include "Requests.h"
+
 
 const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
 
@@ -38,17 +40,20 @@ public:
 	virtual bool tick() {
 		std::lock_guard<std::mutex> lock(map_manager->mt);
 
-		map_manager->checkAllCollisions();
 		map_manager->tick();
-
+		map_manager->checkAllCollisions();
+		
         return false;
 	}
 private:
 	std::shared_ptr<World> map_manager;
 };
-
+	
 int main() {
-	std::cout << "Server started...\n";
+	//initialize logger, must be done before anything else
+	Logger();
+
+	Logger::log("Server started...\n");
 
 	srand(time(NULL));
 	
@@ -56,7 +61,7 @@ int main() {
     MyFramework framework;
     framework.init();
 
-	std::thread t1([&framework]() {
+	std::thread t1([&framework]() { //weird time management purposes, ignore
 		while (true) {
 			auto previous = std::chrono::high_resolution_clock::now();
 			if(framework.tick()) break;
@@ -65,7 +70,7 @@ int main() {
 		}
 	});
 
-	std::thread t2([&port_num]() {
+	std::thread t2([&port_num]() {  //launch server
 		try {
 			//it instantiates an object of the Server class named srv.
 			Server srv;

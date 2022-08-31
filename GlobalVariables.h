@@ -4,8 +4,8 @@
 
 static const int MAP_WIDTH = 8000;
 static const int MAP_HEIGHT = 8000;
-static const int NUM_ASTEROIDS_BIG = 25;
-static const int NUM_ASTEROIDS_SMALL = 25;
+static const int NUM_ASTEROIDS_BIG = 10;
+static const int NUM_ASTEROIDS_SMALL = 10;
 static const int NUM_AMMO = 3;
 static const double ABILITY_PROBABILITY = 0.5;
 static const int BULLET_SPEED = 30;

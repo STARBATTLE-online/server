@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 
+#include "Logger.hpp"
 #include "GlobalVariables.h"
 
 /**
@@ -16,6 +17,31 @@ public:
 	HeadSprite() = default;
 	
 	virtual ~HeadSprite() = default;
+
+	/*
+	static void createMessage(){
+		Logger::log("Creating a HeadSprite");
+	}
+
+	static void deleteMessage(){
+		Logger::log("Deleting a HeadSprite");
+	}
+
+	void * operator new(size_t size)
+	{
+		//cout << "New operator overloading " << endl;
+		createMessage();
+		void * p = ::operator new(size);
+		return p;
+	}
+	
+	void operator delete(void * p)
+	{
+		deleteMessage();
+		//cout << "Delete operator overloading " << endl;
+		::operator delete(p);
+	}
+	*/
 
 	virtual void setCoords(double new_x, double new_y) {
 		global_x = new_x;

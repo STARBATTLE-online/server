@@ -151,6 +151,7 @@ public:
 		ships.push_back(new AIShip(192, 192));
 		ships.back()->setRotation(Rotation::Left);
 		ships.back()->setCoordsByCenter(x, y);
+		ships.back()->setSpeed(rand() % 1000 / 1000., rand() % 1000 / 1000.);
 
 		public_id_to_ship[ships.back()->getPublicKey()] = ships.back();
 		ship_to_public_id[ships.back()] = ships.back()->getPublicKey();
@@ -246,9 +247,18 @@ public:
 			return false;
 		});
 
+		std::erase_if(ships, [&erased] (Ship* ship) {
+			if(ship->getHealth() <= 0) {
+				erased.push_back(ship);
+				return true;
+			}
+
+			return false;
+		});
+
 		// Remove explosions that have already finished
 		std::erase_if(explosions, [this, &erased](Explosion* explosion) {
-			if(explosion->getCreationTick() + 100 < tick_count) {
+			if(explosion->getCreationTick() + 400 < tick_count) {
 				erased.push_back(explosion);
 				return true;
 			}
@@ -271,6 +281,10 @@ public:
 				auto id = ship_to_public_id[r]; 
 				ship_to_public_id[r] = 0;
 				public_id_to_ship[id] = nullptr;
+			}
+
+			if(dynamic_cast<EnemySpawner*>(el)) {
+				explosions.push_back(new HugeExplosion(el->getCenterGlobal().first, el->getCenterGlobal().second, tick_count));
 			}
 			
 			delete el;
@@ -339,13 +353,6 @@ public:
 			auto r = dynamic_cast<EnemySpawner*>(*it);
 			if(r) {
 				r->setCoordsByCenter(MAP_WIDTH / 2, MAP_HEIGHT / 2); 
-
-				if(tick_count % 1024 > 512) {
-					
-					r->setStatus(2);
-				} else {
-					r->setStatus(1);
-				}
 			}
 
 			auto r1 = bulletCollisions(*it, (*it)->getPublicKey());
@@ -353,11 +360,7 @@ public:
 			if(r1) {
 				auto ptr = *(--(it.base()));
 				scores[r1->sender_id] += (*it)->getDestructionScore();
-				if((*it)->getType() == "EnemySpawner") {
-					explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
-				} else {
-					explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
-				}
+				explosions.push_back(new BigExplosion(r1->getCenterGlobal().first, r1->getCenterGlobal().second, tick_count));
 
 				(*it)->takeDamage(r1->getDamage());
 				if((*it)->getHealth() <= 0) {
@@ -423,9 +426,15 @@ public:
 			}
 		}
 
-		for(auto it = ships.rbegin(); it != ships.rend(); ++it) {
+		bool enemySpawnerExists = false;
 
+		for(auto it = ships.rbegin(); it != ships.rend(); ++it) {
 			auto ptr = *(--(it.base()));
+
+			if(dynamic_cast<EnemySpawner*>(ptr)) {
+				enemySpawnerExists = true;
+			}
+
 			if(ptr->getTicksSinceLastSeen() >= 500) {
 				explosions.push_back(new BigExplosion(ptr->getCenterGlobal().first, ptr->getCenterGlobal().second, tick_count));
 				erased.push_back(ptr);
@@ -437,7 +446,7 @@ public:
 		for(auto it = animations.rbegin(); it != animations.rend(); ++it) {
 			auto el = *it;
 			if(el->hasEnded()) {
-				if(el->getType() == "LeftShipAnimation") {
+				if(el->getType() == "LeftShipAnimation" || el->getType() == "RightShipAnimation") {
 					auto [x, y] = el->getCenterGlobal();
 					generateEnemy(x, y);
 					erased.push_back(el);
@@ -457,11 +466,27 @@ public:
 					}
 				}
 			}
+
+			if(dynamic_cast<Ship*>(el)) {
+				auto r = dynamic_cast<Ship*>(el);
+				auto id = ship_to_public_id[r]; 
+				ship_to_public_id[r] = 0;
+				public_id_to_ship[id] = nullptr;
+			}
+
+			if(dynamic_cast<EnemySpawner*>(el)) {
+				explosions.push_back(new HugeExplosion(el->getCenterGlobal().first, el->getCenterGlobal().second, tick_count));
+			}
+			
 			delete el;
 		}
 
-		if(tick_count % 900 == 0 && ships.size() <= 5) {
-			animations.push_back(new LeftShipAnimation());
+		if(tick_count % 900 == 0 && ships.size() <= 5 && enemySpawnerExists) {
+			if(rand() % 2) {
+				animations.push_back(new LeftShipAnimation());
+			} else {
+				animations.push_back(new RightShipAnimation());
+			}
 		}
 
 		for(auto& el : animations) {
@@ -469,13 +494,17 @@ public:
 		}
 
 		for(auto& el : ships) {
+			if(dynamic_cast<AIShip*>(el) && !enemySpawnerExists) {
+				el->setHealth(-100);
+			}
+
 			if(el->getType() != "AIShip") continue;
 			for(auto& el2 : ships) {
 				if(dynamic_cast<AIShip*>(el2) || dynamic_cast<EnemySpawner*>(el2)) continue;
 				auto [mouse_x, mouse_y] = el2->getCenterGlobal();
                 el->sendMouseMoveEvent(mouse_x, mouse_y);
                 el->setRotation(RotationFromString("B"));
-				//shoot(el);
+				shoot(el);
 				// Get vector between two ships
 				auto [x, y] = el->getCenterGlobal();
 				double diff_x = mouse_x - x, diff_y = mouse_y - y;
@@ -489,6 +518,11 @@ public:
 
 				el->setSpeed(diff_x * 5, diff_y * 5);
 			}
+		}
+
+		if(!enemySpawnerExists) {
+			for(auto& el : animations) delete el;
+			animations.clear();
 		}
 
 		for(auto& bullet : bullets) {

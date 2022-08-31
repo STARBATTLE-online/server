@@ -25,6 +25,10 @@ public:
 		this->y_speed = y_speed;
 	};
 
+	std::string getType() override {
+		return "Bullet";
+	}
+
 	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
@@ -193,7 +197,7 @@ public:
 	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << "Ship" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << x_speed << " " << y_speed  << " " << getSpriteID() << " " << protection << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
+		ss << "Ship" << " " << 0 << " "  << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << x_speed << " " << y_speed  << " " << getSpriteID() << " " << protection << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << (std::abs(x_speed) > engine_power_speed / 1.35 || std::abs(y_speed) > engine_power_speed / 1.35) << " " << getPublicKey() << " ";
 
 		return ss.str();
 	}
@@ -370,7 +374,7 @@ public:
 	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << "Ship" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << x_speed << " " << y_speed  << " " << getSpriteID() << " " << protection << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << 1 << " " << getPublicKey() << " ";
+		ss << "Ship" << " " << 0 << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << getRotation() << " " << x_speed << " " << y_speed  << " " << getSpriteID() << " " << protection << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << 1 << " " << getPublicKey() << " ";
 
 		return ss.str();
 	}
@@ -564,9 +568,9 @@ public:
 
 		sprite_id = 5;
 
-		mass = 100000;
+		mass = 10;
 
-		hp = 1000;
+		hp = 100;
 	};
 
 	std::string getType() override {
@@ -578,13 +582,13 @@ public:
 	}
 
 	int getMaxHP() override {
-		return 1000;
+		return 100;
 	}
 
 	std::string serialize() override {
 		std::stringstream ss;
 		ss << std::fixed << std::setprecision(0);
-		ss << "EnemySpawner" << " " << getCenterGlobal().first << " " << getCenterGlobal().second << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << status << " ";
+		ss << "EnemySpawner" << " " << 0 << " "  << getCenterGlobal().first << " " << getCenterGlobal().second << " " << std::max(hp * 10 / getMaxHP(), 1) << " " << status << " ";
 
 		return ss.str();
 	}
@@ -599,7 +603,8 @@ public:
 
 	void heal(uint64_t amount) override {
 		hp = std::min(hp + amount, (uint64_t)getMaxHP());
-		//updateState();
+		
+		updateState();
 	}
 
 	void takeDamage(int damage) override {
@@ -607,12 +612,27 @@ public:
 
 		hp -= damage;
 
-		//updateState();
+		updateState();
 	}
 
 	void updateState() {
-		
+		if(hp < getMaxHP() * 0.75) {
+			setStatus(2);
+		} else {
+			setStatus(1);
+		}
 	}
+
+	void setSpeed(double new_x_speed, double new_y_speed) override {
+		x_speed = 0;
+		y_speed = 0;
+	}
+
+	void setCoordsByCenter(double new_x, double new_y) override {
+		global_x = 4000 - width / 2;
+		global_y = 4000 - height / 2;
+	}
+
 
 	~EnemySpawner() override = default;
 };
