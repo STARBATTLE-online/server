@@ -19,6 +19,7 @@
 #include "server.h"
 #include "Requests.h"
 
+#include "Database.h"
 
 const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
 
@@ -29,6 +30,7 @@ class MyFramework {
 
 public:
 	virtual bool init() {
+		Database::initialize();
 
 		map_manager = std::make_shared<World>();
 
@@ -52,7 +54,10 @@ private:
 int main() {
 	//initialize logger, must be done before anything else
 	Logger();
-
+	//test sequence
+	HeadSprite* testSprite=new HeadSprite();
+	MovableSprite* movableSprite=new MovableSprite();
+	//test done
 	Logger::log("Server started...\n");
 
 	srand(time(NULL));

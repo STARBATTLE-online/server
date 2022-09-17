@@ -570,7 +570,7 @@ public:
 
 		mass = 10;
 
-		hp = 100;
+		hp = 1000;
 	};
 
 	std::string getType() override {
@@ -582,7 +582,7 @@ public:
 	}
 
 	int getMaxHP() override {
-		return 100;
+		return 1000;
 	}
 
 	std::string serialize() override {

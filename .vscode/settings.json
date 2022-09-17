@@ -89,6 +89,10 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "ranges": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp",
+        "*.ipp": "cpp"
     }
 }

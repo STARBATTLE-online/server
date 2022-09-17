@@ -9,6 +9,14 @@ class MovableSprite : public HeadSprite
 public:
 	MovableSprite() = default;
 
+	virtual void createMessage(){
+		Logger::log("Creating a MovableSprite");
+	}
+
+	virtual void deleteMessage(){
+		Logger::log("Deleting a MovableSprite");
+	}
+
 	MovableSprite(double sprite_width, double sprite_height)
 	{
 		width = sprite_width;

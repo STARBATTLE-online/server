@@ -14,19 +14,22 @@
  */
 class HeadSprite {
 public:	
-	HeadSprite() = default;
+	HeadSprite(){
+		createMessage();
+	}
 	
-	virtual ~HeadSprite() = default;
+	virtual ~HeadSprite(){
+		deleteMessage();
+	}
 
-	/*
-	static void createMessage(){
+	virtual void createMessage(){
 		Logger::log("Creating a HeadSprite");
 	}
 
-	static void deleteMessage(){
+	virtual void deleteMessage(){
 		Logger::log("Deleting a HeadSprite");
 	}
-
+	/*
 	void * operator new(size_t size)
 	{
 		//cout << "New operator overloading " << endl;
@@ -98,6 +101,7 @@ public:
 	}
 
 protected:
+	int size=0;
 	double width = 0.;
 	double height = 0.;
 	double global_x = 0.;

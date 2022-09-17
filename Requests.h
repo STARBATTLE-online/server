@@ -3,13 +3,7 @@
 #include <memory>
 #include "World.h"
 
-#include "mysql_connection.h"
-	
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-#include <cppconn/prepared_statement.h>
+#include "Database.h"
 
 /**
  * @brief RequestManager is used to create responses; singleton
@@ -26,6 +20,10 @@ public:
     static void keyRequest(std::stringstream& ss, std::stringstream& response);
     static void tickRequest(std::stringstream& ss, std::stringstream& response);
     static void closeRequest(std::stringstream& ss, std::stringstream& response);
+
+
+    static void registerRequest(std::stringstream& ss, std::stringstream& response);
+    static void loginRequest(std::stringstream& ss, std::stringstream& response);
 };
 
 std::shared_ptr<World> RequestManager::m_map_creator;
@@ -188,4 +186,12 @@ void RequestManager::tickRequest(std::stringstream& ss, std::stringstream& respo
     auto r = RequestManager::m_map_creator->getShipByPublicID(public_key);
     if(r) r->resetTicksSinceLastSeen();
     response << "TICK " << RequestManager::m_map_creator->serialize();
+}
+
+void RequestManager::registerRequest(std::stringstream& ss, std::stringstream& response) {
+    
+}
+
+void RequestManager::loginRequest(std::stringstream& ss, std::stringstream& response) {
+    
 }
